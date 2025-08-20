@@ -1,0 +1,135 @@
+<?php
+require_once __DIR__ . '/../config/Database.php';
+
+class User {
+    private $db;
+    
+    public function __construct() {
+        $database = new Database();
+        $this->db = $database->connect();
+    }
+    
+    public function register($phone_number, $email, $full_name, $password) {
+        try {
+            // Check if user already exists
+            $stmt = $this->db->prepare("SELECT id FROM users WHERE phone_number = ? OR email = ?");
+            $stmt->execute([$phone_number, $email]);
+            
+            if ($stmt->rowCount() > 0) {
+                return ['success' => false, 'message' => 'User already exists'];
+            }
+            
+            // Hash password
+            $password_hash = password_hash($password, PASSWORD_BCRYPT);
+            
+            // Generate unique account number
+            $account_number = 'BC' . str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Insert user
+            $stmt = $this->db->prepare("
+                INSERT INTO users (phone_number, email, full_name, password_hash) 
+                VALUES (?, ?, ?, ?)
+            ");
+            $stmt->execute([$phone_number, $email, $full_name, $password_hash]);
+            
+            $user_id = $this->db->lastInsertId();
+            
+            // Create wallet for user
+            $stmt = $this->db->prepare("
+                INSERT INTO wallets (user_id, account_number) 
+                VALUES (?, ?)
+            ");
+            $stmt->execute([$user_id, $account_number]);
+            
+            return ['success' => true, 'message' => 'Registration successful', 'user_id' => $user_id];
+            
+        } catch(PDOException $e) {
+            return ['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()];
+        }
+    }
+    
+    public function login($phone_number, $password) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT id, password_hash, full_name, is_verified 
+                FROM users 
+                WHERE phone_number = ?
+            ");
+            $stmt->execute([$phone_number]);
+            
+            if ($stmt->rowCount() === 1) {
+                $user = $stmt->fetch();
+                
+                if (password_verify($password, $user['password_hash'])) {
+                    return [
+                        'success' => true,
+                        'user' => [
+                            'id' => $user['id'],
+                            'full_name' => $user['full_name'],
+                            'is_verified' => $user['is_verified']
+                        ]
+                    ];
+                }
+            }
+            
+            return ['success' => false, 'message' => 'Invalid credentials'];
+            
+        } catch(PDOException $e) {
+            return ['success' => false, 'message' => 'Login failed: ' . $e->getMessage()];
+        }
+    }
+    
+    public function getUserById($user_id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT id, phone_number, email, full_name, profile_picture, is_verified, created_at
+                FROM users 
+                WHERE id = ?
+            ");
+            $stmt->execute([$user_id]);
+            
+            return $stmt->fetch();
+            
+        } catch(PDOException $e) {
+            return null;
+        }
+    }
+    
+    public function updateProfile($user_id, $data) {
+        try {
+            $fields = [];
+            $values = [];
+            
+            if (isset($data['full_name'])) {
+                $fields[] = "full_name = ?";
+                $values[] = $data['full_name'];
+            }
+            
+            if (isset($data['email'])) {
+                $fields[] = "email = ?";
+                $values[] = $data['email'];
+            }
+            
+            if (isset($data['profile_picture'])) {
+                $fields[] = "profile_picture = ?";
+                $values[] = $data['profile_picture'];
+            }
+            
+            if (empty($fields)) {
+                return ['success' => false, 'message' => 'No data to update'];
+            }
+            
+            $values[] = $user_id;
+            $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($values);
+            
+            return ['success' => true, 'message' => 'Profile updated successfully'];
+            
+        } catch(PDOException $e) {
+            return ['success' => false, 'message' => 'Update failed: ' . $e->getMessage()];
+        }
+    }
+}
+?>
