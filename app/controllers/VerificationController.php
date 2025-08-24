@@ -70,11 +70,15 @@ class VerificationController {
             Response::error('Method not allowed', 405);
         }
         
-        if (!isset($_FILES['document']) || !isset($_POST['verification_id'])) {
-            Response::error('Document and verification ID are required');
+        if (!isset($_FILES['document'])) {
+            Response::error('Document is required');
         }
         
-        $verificationId = $_POST['verification_id'];
+        // Check if verification_id is provided
+        $verificationId = $_POST['verification_id'] ?? null;
+        if (!$verificationId) {
+            Response::error('Verification ID is required');
+        }
         $side = $_POST['side'] ?? 'front';
         
         // Validate file

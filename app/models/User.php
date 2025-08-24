@@ -7,15 +7,23 @@ class User {
     public function __construct() {
         $database = new Database();
         $this->db = $database->connect();
+        
+        if (!$this->db) {
+            throw new Exception("Database connection failed");
+        }
     }
     
-    public function register($phone_number, $email, $full_name, $password) {
+    public function register($phone_number, $email, $full_name, $password, $birthdate = null, $address = null, $gender = null) {
         try {
+            // Debugging: Log registration attempt
+            error_log("Registration attempt: phone=$phone_number, email=$email, name=$full_name");
+            
             // Check if user already exists
             $stmt = $this->db->prepare("SELECT id FROM users WHERE phone_number = ? OR email = ?");
             $stmt->execute([$phone_number, $email]);
             
             if ($stmt->rowCount() > 0) {
+                error_log("User already exists: phone=$phone_number, email=$email");
                 return ['success' => false, 'message' => 'User already exists'];
             }
             
@@ -25,12 +33,16 @@ class User {
             // Generate unique account number
             $account_number = 'BC' . str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
             
-            // Insert user
+            // Insert user with additional fields
             $stmt = $this->db->prepare("
-                INSERT INTO users (phone_number, email, full_name, password_hash) 
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (phone_number, email, full_name, birthdate, address, gender, password_hash) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$phone_number, $email, $full_name, $password_hash]);
+            
+            // Debugging: Log the values being inserted
+            error_log("Inserting user: phone=$phone_number, email=$email, name=$full_name, birthdate=$birthdate, address=$address, gender=$gender");
+            
+            $stmt->execute([$phone_number, $email, $full_name, $birthdate, $address, $gender, $password_hash]);
             
             $user_id = $this->db->lastInsertId();
             
@@ -41,9 +53,14 @@ class User {
             ");
             $stmt->execute([$user_id, $account_number]);
             
+            error_log("Registration successful: user_id=$user_id, account_number=$account_number");
             return ['success' => true, 'message' => 'Registration successful', 'user_id' => $user_id];
             
         } catch(PDOException $e) {
+            error_log("Registration failed with PDO error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()];
+        } catch(Exception $e) {
+            error_log("Registration failed with general error: " . $e->getMessage());
             return ['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()];
         }
     }

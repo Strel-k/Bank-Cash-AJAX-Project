@@ -1,7 +1,7 @@
 // Authentication JavaScript for B-Cash
 class AuthService {
     constructor() {
-        this.apiUrl = '/api/auth.php';
+        this.apiUrl = '/api/auth.php'; // Use relative path
     }
     
     async register(userData) {
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await authService.login(credentials);
             
             if (result.success) {
-                window.location.href = '/dashboard.php';
+                window.location.href = 'index.php';
             } else {
                 alert(result.message);
             }

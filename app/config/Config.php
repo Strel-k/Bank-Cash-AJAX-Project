@@ -2,7 +2,7 @@
 class Config {
     // Database configuration
     const DB_HOST = 'localhost';
-    const DB_NAME = 'b_cash';
+    const DB_NAME = 'b_cash_ajax';
     const DB_USER = 'root';
     const DB_PASS = '';
     

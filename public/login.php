@@ -1,13 +1,6 @@
 <?php
 session_start();
-require_once 'app/config/Config.php';
-require_once 'app/controllers/AuthController.php';
-
-$authController = new AuthController();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $authController->login();
-}
+require_once __DIR__ . '/../app/config/Config.php';
 ?>
 
 <!DOCTYPE html>
@@ -16,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - B-Cash</title>
-    <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -86,25 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-            submitBtn.disabled = true;
-            
-            // Simulate login process
-            setTimeout(() => {
-                alert('Login functionality will be implemented with your backend API');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }, 2000);
-        });
-    </script>
+<script src="js/auth.js"></script>
 </body>
 </html>

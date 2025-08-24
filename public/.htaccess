@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase /
+
+# Redirect all requests to the public directory
+RewriteRule ^register\.php$ register.php [L]
+RewriteRule ^api/(.*)$ public/api/$1 [L]
+
+# Serve index.php and login.php directly
+RewriteRule ^(index\.php|login\.php)$ $1 [L]

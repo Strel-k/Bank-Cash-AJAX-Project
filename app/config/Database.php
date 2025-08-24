@@ -1,4 +1,6 @@
 <?php
+require_once 'Config.php';
+
 class Database {
     private $host;
     private $db_name;
@@ -28,7 +30,9 @@ class Database {
                 ]
             );
         } catch(PDOException $e) {
-            echo "Connection error: " . $e->getMessage();
+            // Return null instead of echoing to prevent breaking JSON responses
+            error_log("Database connection error: " . $e->getMessage());
+            return null;
         }
         
         return $this->connection;

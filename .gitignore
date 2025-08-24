@@ -45,3 +45,24 @@ composer.phar
 /storage/framework/views/*
 /storage/logs/*
 /bootstrap/cache/
+
+# Test files
+test_api.php
+test_registration.php
+test_registration.html
+test_db_connection.php
+test-verification.php
+public/api/test.php
+public/api/test-verification.php
+public/test_registration.html
+add_user_fields.php
+check_users_table.php
+check_verification_fields.php
+debug.php
+logout.php
+run-verification-schema.php
+setup_database.php
+verification.php
+TODO-fix-authentication.md
+TODO-fix-document-upload.md
+TODO.md

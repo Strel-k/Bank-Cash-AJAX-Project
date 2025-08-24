@@ -1,8 +1,17 @@
 <?php
 class Response {
     public static function json($data, $status = 200) {
+        // Clear any previous output
+        if (ob_get_length()) {
+            ob_clean();
+        }
+        
         http_response_code($status);
         header('Content-Type: application/json');
+        
+        // Ensure no errors are displayed
+        ini_set('display_errors', 0);
+        
         echo json_encode($data);
         exit;
     }

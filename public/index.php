@@ -1,7 +1,13 @@
 <?php
 session_start();
-require_once 'app/config/Config.php';
-require_once 'app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/config/Config.php';
+require_once __DIR__ . '/../app/controllers/AuthController.php';
+
+// Check if user is authenticated
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
 
 $authController = new AuthController();
 ?>
@@ -12,12 +18,12 @@ $authController = new AuthController();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B-Cash - Your Digital Wallet</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="public/js/auth.js"></script>
-    <script src="public/js/wallet.js"></script>
-    <script src="public/js/transaction.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/wallet.js"></script>
+<script src="js/transaction.js"></script>
 </head>
 <body>
     <header class="header">
@@ -26,8 +32,10 @@ $authController = new AuthController();
                 <i class="fas fa-wallet"></i> B-Cash
             </div>
             <nav class="nav-links">
-                <a href="register.php"><i class="fas fa-user-plus"></i> Register</a>
-                <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <span style="color: var(--gcash-blue); margin-right: var(--spacing-md);">
+                    <i class="fas fa-user"></i> Welcome, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>
+                </span>
+                <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </nav>
         </div>
     </header>
