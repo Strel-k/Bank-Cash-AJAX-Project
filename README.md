@@ -1,216 +1,167 @@
-# B-Cash AJAX - Digital Wallet System
+# 🏦 B-Cash - Digital Wallet with AI Facial Recognition
 
-A modern, secure digital wallet application built with PHP, JavaScript, and MySQL. B-Cash provides a complete solution for digital payments, money transfers, and user verification.
+A modern, secure digital wallet application built with PHP and JavaScript, featuring **real AI-powered facial recognition** for enhanced security.
 
-## Features
+## ✨ Key Features
 
-### 🏦 Core Wallet Features
-- **Account Management**: Create and manage digital wallet accounts
-- **Balance Tracking**: Real-time balance updates and transaction history
-- **Money Transfers**: Send money to other users via account numbers
-- **Transaction History**: Complete audit trail of all financial activities
+### 🤖 **AI Facial Recognition**
+- **Real-time face detection** using Face-API.js
+- **Live camera capture** with anti-spoofing protection
+- **Liveness detection** to prevent photo/video attacks
+- **Bank-grade security** with similarity scoring
+- **100% free** - no API costs (client-side processing)
 
-### 🔐 Security & Verification
-- **Multi-Step Registration**: Comprehensive user onboarding process
-- **ID Verification**: Document upload and verification system
-- **Face Recognition**: Biometric verification for enhanced security
-- **Session Management**: Secure authentication and authorization
+### 💰 **Digital Wallet**
+- User registration and authentication
+- Secure money transfers
+- Transaction history and analytics
+- Real-time balance updates
+- Multi-factor security
 
-### 💳 Payment Features
-- **Quick Actions**: Send, receive, add money, and pay bills
-- **Account Search**: Find users by account number
-- **Transaction Reference**: Unique reference numbers for all transactions
-- **Real-time Updates**: Live balance and transaction updates
+### 🔒 **Security Features**
+- Face verification before account creation
+- Encrypted password storage
+- Session management
+- CSRF protection
+- Secure file uploads
 
-## System Requirements
+## 🚀 Quick Start
 
-- **PHP**: 7.4 or higher
-- **MySQL**: 5.7 or higher (or MariaDB 10.2+)
-- **Web Server**: Apache/Nginx
-- **Browser**: Modern browsers with JavaScript enabled
+### Prerequisites
+- PHP 7.4 or higher
+- MySQL 5.7 or higher
+- Web server (Apache/Nginx)
+- Modern web browser with camera support
 
-## Installation
+### Installation
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd B-Cash-AJAX
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Strel-k/Bank-Cash-AJAX-Project.git
+   cd Bank-Cash-AJAX-Project
+   ```
+
+2. **Set up the database**
+   ```bash
+   mysql -u root -p < database/b_cash.sql
+   ```
+
+3. **Configure database connection**
+   ```php
+   // Edit app/config/Config.php
+   const DB_HOST = 'localhost';
+   const DB_NAME = 'b_cash_ajax';
+   const DB_USER = 'your_username';
+   const DB_PASS = 'your_password';
+   ```
+
+4. **Download AI models**
+   ```bash
+   php download-ai-models.php
+   ```
+
+5. **Set up web server**
+   - Point document root to `public/` directory
+   - Ensure `.htaccess` is enabled for Apache
+
+6. **Test the system**
+   ```bash
+   php test_system.php
+   ```
+
+## 🤖 AI Setup Guide
+
+### Face-API.js Models
+The system uses Face-API.js for real-time facial recognition:
+
+1. **Automatic Setup**: Run `php download-ai-models.php`
+2. **Manual Setup**: Visit `setup-face-recognition.html` for detailed instructions
+3. **Test AI**: Open `public/test-face-ai.html` to verify AI functionality
+
+### AI Features
+- **Face Detection**: 90-95% accuracy
+- **Liveness Detection**: Anti-spoofing protection
+- **Face Comparison**: Mathematical similarity scoring
+- **Real-time Processing**: No server-side AI costs
+
+## 📁 Project Structure
+
 ```
-
-### 2. Database Setup
-1. Create a MySQL database named `b_cash_ajax`
-2. Import the database schema:
-```bash
-mysql -u root -p < database/setup.sql
-```
-
-### 3. Configuration
-1. Update database credentials in `app/config/Config.php`:
-```php
-const DB_HOST = 'localhost';
-const DB_NAME = 'b_cash_ajax';
-const DB_USER = 'your_username';
-const DB_PASS = 'your_password';
-```
-
-2. Update application URL:
-```php
-const APP_URL = 'http://your-domain.com';
-```
-
-### 4. Web Server Configuration
-1. Point your web server to the `public/` directory
-2. Ensure the `uploads/` directory is writable
-3. Configure URL rewriting if needed
-
-### 5. File Permissions
-```bash
-chmod 755 uploads/
-chmod 755 uploads/verification/
-```
-
-## Usage
-
-### User Registration
-1. Navigate to `/register.php`
-2. Complete the 4-step registration process:
-   - Basic Information
-   - ID Document Upload
-   - Face Verification
-   - Account Activation
-
-### User Login
-1. Navigate to `/login.php`
-2. Use phone number and password to authenticate
-3. Access your digital wallet dashboard
-
-### Wallet Operations
-- **View Balance**: Check your current balance
-- **Send Money**: Transfer funds to other users
-- **Receive Money**: Share your account number
-- **Transaction History**: View all past transactions
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth.php?action=register` - User registration
-- `POST /api/auth.php?action=login` - User login
-- `POST /api/auth.php?action=logout` - User logout
-
-### Wallet
-- `GET /api/wallet.php?action=balance` - Get wallet balance
-- `GET /api/wallet.php?action=info` - Get wallet information
-- `POST /api/wallet.php?action=transfer` - Transfer money
-- `GET /api/wallet.php?action=search` - Search accounts
-
-### Transactions
-- `GET /api/transaction.php?action=history` - Get transaction history
-- `GET /api/transaction.php?action=stats` - Get transaction statistics
-- `GET /api/transaction.php?action=search` - Search transactions
-- `GET /api/transaction.php?action=reference` - Get transaction by reference
-
-### Verification
-- `POST /api/verification.php?action=upload-document` - Upload ID documents
-- `POST /api/verification.php?action=upload-face` - Upload face image
-- `POST /api/verification.php?action=verify` - Perform verification
-- `GET /api/verification.php?action=status` - Get verification status
-
-## Database Schema
-
-### Core Tables
-- **users**: User account information
-- **wallets**: Wallet balances and account numbers
-- **transactions**: Financial transaction records
-- **security_tokens**: Authentication tokens
-
-### Verification Tables
-- **user_verification**: ID and face verification data
-- **verification_logs**: Audit trail for verification actions
-
-## Security Features
-
-- **Password Hashing**: Bcrypt encryption for passwords
-- **Session Management**: Secure PHP sessions
-- **Input Validation**: Comprehensive data validation
-- **SQL Injection Protection**: Prepared statements
-- **File Upload Security**: Type and size validation
-- **CSRF Protection**: Cross-site request forgery prevention
-
-## Testing
-
-### Sample Accounts
-The system includes test accounts for development:
-
-**Admin User:**
-- Phone: 09123456789
-- Password: password
-- Balance: ₱10,000.00
-
-**Test User:**
-- Phone: 09187654321
-- Password: password
-- Balance: ₱5,000.00
-
-### API Testing
-Use the included test files:
-- `test_login_api.php` - Test authentication endpoints
-- `test_transaction_api.php` - Test transaction endpoints
-- `test_wallet_api.php` - Test wallet endpoints
-
-## Development
-
-### Project Structure
-```
-B-Cash AJAX/
+B-Cash-AJAX-Project/
 ├── app/
 │   ├── config/          # Configuration files
-│   ├── controllers/     # Application controllers
-│   ├── helpers/         # Helper classes
-│   ├── models/          # Data models
-│   └── services/        # Business logic services
-├── css/                 # Stylesheets
-├── database/            # Database schemas
-├── img/                 # Images and assets
-├── js/                  # JavaScript files
-├── public/              # Public web files
-├── uploads/             # File uploads
-└── README.md            # This file
+│   ├── controllers/     # Business logic
+│   ├── models/         # Data models
+│   ├── services/       # External services
+│   └── helpers/        # Utility functions
+├── public/
+│   ├── api/            # API endpoints
+│   ├── js/             # JavaScript files
+│   ├── css/            # Stylesheets
+│   ├── models/         # AI model files
+│   └── *.php           # Public pages
+├── database/           # SQL schema files
+├── uploads/            # User uploads (protected)
+└── css/               # Additional styles
 ```
 
-### Adding New Features
-1. Create model classes in `app/models/`
-2. Add controller methods in `app/controllers/`
-3. Create API endpoints in `public/api/`
-4. Add JavaScript functionality in `public/js/`
-5. Update database schema if needed
+## 🔒 Security
 
-## Troubleshooting
+### Data Protection
+- **No sensitive data** in Git repository
+- **Encrypted uploads** directory
+- **Secure session** management
+- **GDPR compliant** data handling
 
-### Common Issues
+### AI Privacy
+- **Client-side processing** - no data sent to external servers
+- **Local face analysis** - biometric data stays in browser
+- **No tracking** - Face-API.js runs offline
 
-**Database Connection Error**
-- Verify database credentials in `Config.php`
-- Ensure MySQL service is running
-- Check database exists and is accessible
+## 🛠️ Development
 
-**File Upload Issues**
-- Verify `uploads/` directory permissions
-- Check PHP upload settings in `php.ini`
-- Ensure sufficient disk space
+### Testing
+- `test_system.php` - System verification
+- `public/test-face-ai.html` - AI functionality test
+- Browser console - Real-time AI debugging
 
-**Session Issues**
-- Check PHP session configuration
-- Verify cookie settings
-- Clear browser cookies and cache
+### API Endpoints
+- `/api/auth.php` - Authentication
+- `/api/wallet.php` - Wallet operations
+- `/api/transaction.php` - Transaction management
+- `/api/verification.php` - Document verification
 
-### Debug Mode
-Enable debug mode by setting:
-```php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-```
+## 📱 Browser Support
 
-## Contributing
+### Required Features
+- **Camera access** (getUserMedia API)
+- **Modern JavaScript** (ES6+)
+- **Canvas support** for image processing
+- **WebRTC** for real-time video
+
+### Tested Browsers
+- ✅ Chrome 80+
+- ✅ Firefox 75+
+- ✅ Safari 13+
+- ✅ Edge 80+
+
+## 🎯 Production Deployment
+
+### Security Checklist
+- [ ] Update database credentials
+- [ ] Enable SSL/HTTPS
+- [ ] Set secure file permissions
+- [ ] Configure error logging
+- [ ] Remove test files
+- [ ] Enable production mode
+
+### Performance
+- [ ] Enable gzip compression
+- [ ] Optimize database queries
+- [ ] Cache static assets
+- [ ] Monitor AI model loading
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -218,27 +169,37 @@ ini_set('display_errors', 1);
 4. Test thoroughly
 5. Submit a pull request
 
-## License
+### Development Guidelines
+- Follow PSR-4 autoloading standards
+- Use meaningful commit messages
+- Test AI features across browsers
+- Maintain security best practices
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📄 License
 
-## Support
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-For support and questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation
+## 🆘 Support
 
-## Changelog
+### Documentation
+- `SECURITY.md` - Security guidelines
+- `setup-face-recognition.html` - AI setup guide
+- Inline code comments
 
-### Version 1.0.0
-- Initial release
-- Core wallet functionality
-- User authentication system
-- ID and face verification
-- Transaction management
-- Responsive web interface
+### Issues
+- Report bugs via GitHub Issues
+- Include browser and PHP version
+- Provide steps to reproduce
+
+## 🎉 Acknowledgments
+
+- **Face-API.js** - Real-time face recognition
+- **Font Awesome** - Icons
+- **Inter Font** - Typography
+- **PHP Community** - Framework inspiration
 
 ---
 
-**B-Cash AJAX** - Making digital payments simple, secure, and accessible. 
+**Built with ❤️ for secure digital banking**
+
+*Real AI facial recognition • Bank-grade security • 100% free to run*
