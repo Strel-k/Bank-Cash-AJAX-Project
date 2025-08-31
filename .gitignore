@@ -1,68 +1,111 @@
-# Dependencies
-/vendor/
-/node_modules/
+# B-Cash Security .gitignore
+# This file prevents sensitive data from being committed to Git
 
-# IDE
+# ===== CRITICAL SECURITY FILES =====
+# Never commit personal documents, photos, or sensitive data
+
+# User uploaded verification documents (ID cards, passports, etc.)
+uploads/verification/
+uploads/verification/*
+uploads/verification/**/*
+
+# Face recognition photos and biometric data
+uploads/faces/
+uploads/faces/*
+uploads/faces/**/*
+
+# Any uploaded user content
+uploads/users/
+uploads/documents/
+uploads/photos/
+
+# ===== CONFIGURATION & SECRETS =====
+# Database and API credentials
+.env
+.env.local
+.env.production
+config/database.php
+config/secrets.php
+
+# API keys and tokens
+api_keys.php
+secrets.json
+credentials.json
+
+# ===== DEVELOPMENT FILES =====
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
+# ===== LOGS & TEMPORARY FILES =====
+# Log files
 *.log
 logs/
+error.log
+access.log
 
-# Environment variables
-.env
-.env.local
-.env.production
-
-# Cache
-.cache/
-temp/
+# Temporary files
 tmp/
+temp/
+cache/
+*.tmp
+*.temp
 
-# Build files
-dist/
-build/
+# ===== BACKUP FILES =====
+# Database backups
+*.sql.backup
+*.sql.bak
+database_backup_*
 
-# Database
-*.sqlite
-*.db
+# Code backups
+*.backup
+*.bak
+*_backup.*
 
-# PHP
+# ===== VENDOR & DEPENDENCIES =====
+# Composer dependencies (if using)
+vendor/
 composer.lock
-composer.phar
 
-# Laravel
-/storage/*.key
-/storage/framework/cache/data/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
-/bootstrap/cache/
+# Node modules (if using)
+node_modules/
+package-lock.json
 
-# Test files
-test_api.php
-test_registration.php
-test_registration.html
-test_db_connection.php
-test-verification.php
-public/api/test.php
-public/api/test-verification.php
-public/test_registration.html
-add_user_fields.php
-check_users_table.php
-check_verification_fields.php
-debug.php
-logout.php
-run-verification-schema.php
-setup_database.php
-verification.php
-TODO-fix-authentication.md
-TODO-fix-document-upload.md
-TODO.md
+# ===== TESTING FILES =====
+# Test uploads and temporary test data
+test_uploads/
+test_data/
+phpunit.xml
+.phpunit.result.cache
+
+# ===== AI MODEL FILES =====
+# Large AI model files (should be downloaded separately)
+# Uncomment if models are too large for Git
+# public/models/*.bin
+# public/models/*.dat
+
+# ===== SECURITY NOTES =====
+# This .gitignore protects:
+# 1. Personal ID documents and photos
+# 2. Biometric face recognition data  
+# 3. Database credentials and API keys
+# 4. User uploaded content
+# 5. System logs and temporary files
+#
+# NEVER commit:
+# - Real user photos or documents
+# - Database passwords or API keys
+# - Personal information or biometric data
+# - Production configuration files
