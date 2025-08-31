@@ -9,7 +9,7 @@ require_once __DIR__ . '/../app/config/Config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - B-Cash</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -625,12 +625,16 @@ require_once __DIR__ . '/../app/config/Config.php';
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <button type="button" class="btn-step" onclick="captureFace()" style="margin: 0 auto;">
-                                    <i class="fas fa-camera"></i> Capture Photo
+                                    <i class="fas fa-camera"></i> Start Camera
                                 </button>
-                                <input type="file" id="faceInput" class="upload-input" accept="image/*" onchange="uploadFaceImage(this)" style="display: none;">
-                                <button type="button" class="btn-step" onclick="document.getElementById('faceInput').click()" style="margin: 1rem auto 0;">
-                                    <i class="fas fa-upload"></i> Upload Photo
-                                </button>
+                                <div style="text-align: center; margin-top: 1rem;">
+                                    <p style="color: #666; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-shield-alt"></i> <strong>Security Checkpoint</strong>
+                                    </p>
+                                    <p style="color: #856404; font-size: 0.75rem; background: #fff3cd; padding: 8px; border-radius: 4px; margin: 0;">
+                                        <i class="fas fa-exclamation-triangle"></i> Face verification must pass before account creation
+                                    </p>
+                                </div>
                             </div>
                             
                             <div class="form-group">
@@ -688,7 +692,10 @@ require_once __DIR__ . '/../app/config/Config.php';
         </div>
     </footer>
 
-    <script src="js/register-verification.js"></script>
     <script src="js/auth.js"></script>
+    <!-- Face-API.js for real AI facial recognition -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="js/face-recognition.js"></script>
+    <script src="js/register-verification-fixed.js"></script>
 </body>
 </html>

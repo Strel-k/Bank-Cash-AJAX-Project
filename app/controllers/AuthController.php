@@ -1,4 +1,4 @@
-    <?php
+<?php
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Verification.php';
 require_once __DIR__ . '/../helpers/Response.php';
@@ -120,22 +120,53 @@ class AuthController {
                 $_SESSION['user_id'] = $userId;
                 $_SESSION['full_name'] = $full_name;
                 
-                if ($document_type && $document_number) {
-                    $verificationResult = $this->startVerificationProcess($userId, $document_type, $document_number);
+                // Always create a verification request for document uploads
+                $verificationResult = $this->startVerificationProcess(
+                    $userId, 
+                    $document_type ?: 'national_id', // Default to national_id if not provided
+                    $document_number ?: 'PENDING'    // Default placeholder if not provided
+                );
+                
+                error_log("AuthController: User registered with ID: $userId");
+                error_log("AuthController: Verification result: " . json_encode($verificationResult));
+                
+                if ($verificationResult['success']) {
+                    error_log("AuthController: Verification created successfully with ID: " . $verificationResult['verification_id']);
+                    Response::success([
+                        'user_id' => $userId,
+                        'verification_id' => $verificationResult['verification_id']
+                    ], 'Registration successful. Please complete verification.');
+                } else {
+                    error_log("AuthController: Verification creation failed: " . $verificationResult['message']);
                     
-                    if ($verificationResult['success']) {
+                    // Try to create verification directly as fallback
+                    try {
+                        $directResult = $this->verificationModel->createVerificationRequest(
+                            $userId,
+                            $document_type ?: 'national_id',
+                            $document_number ?: 'PENDING'
+                        );
+                        
+                        if ($directResult['success']) {
+                            error_log("AuthController: Direct verification creation successful with ID: " . $directResult['verification_id']);
+                            Response::success([
+                                'user_id' => $userId,
+                                'verification_id' => $directResult['verification_id']
+                            ], 'Registration successful. Please complete verification.');
+                        } else {
+                            error_log("AuthController: Direct verification creation also failed: " . $directResult['message']);
+                            Response::success([
+                                'user_id' => $userId,
+                                'verification_error' => $directResult['message']
+                            ], 'Registration successful but verification setup failed. Please complete verification later.');
+                        }
+                    } catch (Exception $e) {
+                        error_log("AuthController: Exception in direct verification creation: " . $e->getMessage());
                         Response::success([
                             'user_id' => $userId,
-                            'verification_id' => $verificationResult['verification_id']
-                        ], 'Registration successful. Please complete verification.');
-                    } else {
-                        Response::success([
-                            'user_id' => $userId,
-                            'verification_error' => $verificationResult['message']
+                            'verification_error' => 'Could not create verification record'
                         ], 'Registration successful but verification setup failed. Please complete verification later.');
                     }
-                } else {
-                    Response::success(['user_id' => $userId], 'Registration successful. Please complete verification.');
                 }
             } else {
                 Response::error($result['message']);
@@ -169,7 +200,7 @@ class AuthController {
             Response::success([
                 'user' => $result['user'],
                 'token' => session_id()
-            ], $result['message']);
+            ], $result['message'] ?? 'Login successful');
         } else {
             Response::error($result['message'], 401);
         }
@@ -228,8 +259,11 @@ class AuthController {
     }
     
     public function checkAuth() {
-        if (!isset($_SESSION['user_id'])) {
-            Response::unauthorized('Not authenticated');
+        if (!isset($_SESSION['user_id']) || 
+            $_SESSION['ip'] !== $_SERVER['REMOTE_ADDR'] ||
+            $_SESSION['user_agent'] !== $_SERVER['HTTP_USER_AGENT']) {
+            session_destroy();
+            Response::unauthorized('Session validation failed');
         }
         
         Response::success([

@@ -1,12 +1,14 @@
 // Transaction JavaScript for B-Cash
 class TransactionService {
     constructor() {
-        this.apiUrl = '/api/transaction.php';
+        this.apiUrl = 'api/transaction.php';
     }
     
     async getTransactionHistory(limit = 50, offset = 0) {
         try {
-            const response = await fetch(`${this.apiUrl}?action=history&limit=${limit}&offset=${offset}`);
+            const response = await fetch(`${this.apiUrl}?action=history&limit=${limit}&offset=${offset}`, {
+                credentials: 'include'
+            });
             const result = await response.json();
             return result;
         } catch (error) {
@@ -16,7 +18,9 @@ class TransactionService {
     
     async getTransactionStats() {
         try {
-            const response = await fetch(`${this.apiUrl}?action=stats`);
+            const response = await fetch(`${this.apiUrl}?action=stats`, {
+                credentials: 'include'
+            });
             const result = await response.json();
             return result;
         } catch (error) {
@@ -26,7 +30,9 @@ class TransactionService {
     
     async searchTransactions(searchTerm, limit = 20) {
         try {
-            const response = await fetch(`${this.apiUrl}?action=search&q=${encodeURIComponent(searchTerm)}&limit=${limit}`);
+            const response = await fetch(`${this.apiUrl}?action=search&q=${encodeURIComponent(searchTerm)}&limit=${limit}`, {
+                credentials: 'include'
+            });
             const result = await response.json();
             return result;
         } catch (error) {

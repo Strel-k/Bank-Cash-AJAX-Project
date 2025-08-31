@@ -1,11 +1,15 @@
 // Authentication JavaScript for B-Cash
 class AuthService {
     constructor() {
-        this.apiUrl = '/api/auth.php'; // Use relative path
+        this.apiUrl = 'api/auth.php'; // Use relative path from public directory
     }
     
     async register(userData) {
         try {
+            console.log('AuthService: Starting registration...');
+            console.log('AuthService: API URL:', `${this.apiUrl}?action=register`);
+            console.log('AuthService: User data:', JSON.stringify(userData));
+            
             const response = await fetch(`${this.apiUrl}?action=register`, {
                 method: 'POST',
                 headers: {
@@ -14,15 +18,22 @@ class AuthService {
                 body: JSON.stringify(userData)
             });
             
+            console.log('AuthService: Response status:', response.status);
+            console.log('AuthService: Response headers:', response.headers);
+            
             const result = await response.json();
+            console.log('AuthService: Parsed result:', result);
             
             if (result.success) {
-                return { success: true, data: result };
+                console.log('AuthService: Registration successful');
+                return { success: true, data: result.data };
             } else {
+                console.log('AuthService: Registration failed:', result.message);
                 return { success: false, message: result.message };
             }
         } catch (error) {
-            return { success: false, message: 'Registration failed' };
+            console.error('AuthService: Registration error:', error);
+            return { success: false, message: 'Registration failed: ' + error.message };
         }
     }
     
@@ -71,6 +82,7 @@ class AuthService {
 
 // Initialize auth service
 const authService = new AuthService();
+window.authService = authService; // Make it globally accessible
 
 // Form handlers
 document.addEventListener('DOMContentLoaded', function() {

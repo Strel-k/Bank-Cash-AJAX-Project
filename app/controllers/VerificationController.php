@@ -10,7 +10,9 @@ class VerificationController {
     }
     
     private function checkAuth() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         if (!isset($_SESSION['user_id'])) {
             Response::unauthorized('Authentication required');
         }
@@ -55,9 +57,8 @@ class VerificationController {
             );
             
             Response::success([
-                'verification_id' => $result['verification_id'],
-                'message' => 'Verification started successfully'
-            ]);
+                'verification_id' => $result['verification_id']
+            ], 'Verification started successfully');
         } else {
             Response::error($result['message']);
         }
@@ -76,6 +77,14 @@ class VerificationController {
         
         // Check if verification_id is provided
         $verificationId = $_POST['verification_id'] ?? null;
+        
+        // Debug logging
+        error_log("Upload Document Debug:");
+        error_log("POST data: " . json_encode($_POST));
+        error_log("FILES data: " . json_encode(array_keys($_FILES)));
+        error_log("Verification ID: " . ($verificationId ?: 'NULL'));
+        error_log("User ID: " . $userId);
+        
         if (!$verificationId) {
             Response::error('Verification ID is required');
         }
@@ -94,7 +103,7 @@ class VerificationController {
         }
         
         // Create upload directory
-        $uploadDir = '../../uploads/verification/' . $userId . '/';
+        $uploadDir = __DIR__ . '/../../uploads/verification/' . $userId . '/';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
@@ -154,7 +163,7 @@ class VerificationController {
         }
         
         // Create upload directory
-        $uploadDir = '../../uploads/verification/' . $userId . '/';
+        $uploadDir = __DIR__ . '/../../uploads/verification/' . $userId . '/';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }

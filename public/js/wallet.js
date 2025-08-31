@@ -1,12 +1,14 @@
 // Wallet JavaScript for B-Cash
 class WalletService {
     constructor() {
-        this.apiUrl = '/api/wallet.php';
+        this.apiUrl = 'api/wallet.php';
     }
     
     async getBalance() {
         try {
-            const response = await fetch(`${this.apiUrl}?action=balance`);
+            const response = await fetch(`${this.apiUrl}?action=balance`, {
+                credentials: 'include'
+            });
             const result = await response.json();
             return result;
         } catch (error) {
@@ -21,6 +23,7 @@ class WalletService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify(transferData)
             });
             const result = await response.json();
@@ -32,7 +35,9 @@ class WalletService {
     
     async searchAccount(account) {
         try {
-            const response = await fetch(`${this.apiUrl}?action=search&account=${account}`);
+            const response = await fetch(`${this.apiUrl}?action=search&account=${account}`, {
+                credentials: 'include'
+            });
             const result = await response.json();
             return result;
         } catch (error) {

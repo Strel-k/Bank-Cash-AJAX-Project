@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Document Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 10px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; white-space: pre-wrap; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        input[type="file"] { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Document Upload Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Registration</h2>
+        <button onclick="testRegistration()">Test Registration</button>
+        <div id="registrationResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Session Check</h2>
+        <button onclick="checkSession()">Check Session</button>
+        <div id="sessionResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Document Upload</h2>
+        <input type="file" id="testDocument" accept="image/*">
+        <br>
+        <input type="text" id="verificationId" placeholder="Enter Verification ID" style="width: 200px;">
+        <br>
+        <button onclick="testDocumentUpload()">Test Document Upload</button>
+        <div id="uploadResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Test Debug Upload</h2>
+        <input type="file" id="debugDocument" accept="image/*">
+        <br>
+        <button onclick="testDebugUpload()">Test Debug Upload (with fake verification ID)</button>
+        <div id="debugUploadResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 5: Test Complete Flow</h2>
+        <button onclick="testCompleteFlow()">Test Complete Registration Flow</button>
+        <div id="completeFlowResult" class="result"></div>
+    </div>
+
+    <script src="public/js/auth.js"></script>
+    <script>
+        let testVerificationId = null;
+        
+        async function testRegistration() {
+            const resultDiv = document.getElementById('registrationResult');
+            resultDiv.innerHTML = 'Testing registration...';
+            
+            const testData = {
+                full_name: 'Test User',
+                phone_number: '09123456789',
+                email: 'test@example.com',
+                password: 'testpass123',
+                birthdate: '1990-01-01',
+                address: 'Test Address',
+                gender: 'male',
+                document_type: 'national_id',
+                document_number: 'TEST123456789'
+            };
+            
+            try {
+                console.log('Testing registration with:', testData);
+                const result = await window.authService.register(testData);
+                console.log('Registration result:', result);
+                
+                if (result.success) {
+                    testVerificationId = result.data.verification_id;
+                    document.getElementById('verificationId').value = testVerificationId || '';
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `SUCCESS!
+Message: ${result.data.message || 'Registration successful'}
+User ID: ${result.data.user_id}
+Verification ID: ${result.data.verification_id || 'NOT PROVIDED'}
+Full Data: ${JSON.stringify(result.data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `FAILED!
+Message: ${result.message}
+Full result: ${JSON.stringify(result, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `ERROR!
+${error.message}
+Stack: ${error.stack}`;
+            }
+        }
+        
+        async function checkSession() {
+            const resultDiv = document.getElementById('sessionResult');
+            resultDiv.innerHTML = 'Checking session...';
+            
+            try {
+                const response = await fetch('public/api/auth.php?action=check', {
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `SESSION ACTIVE!
+User ID: ${result.data.user_id}
+Full Name: ${result.data.full_name}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `NO SESSION!
+Message: ${result.message}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `ERROR!
+${error.message}`;
+            }
+        }
+        
+        async function testDocumentUpload() {
+            const resultDiv = document.getElementById('uploadResult');
+            const fileInput = document.getElementById('testDocument');
+            const verificationIdInput = document.getElementById('verificationId');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = 'Please select a file first!';
+                return;
+            }
+            
+            const verificationId = verificationIdInput.value || testVerificationId;
+            if (!verificationId) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = 'Please provide a verification ID!';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing document upload...';
+            
+            const formData = new FormData();
+            formData.append('document', fileInput.files[0]);
+            formData.append('side', 'front');
+            formData.append('document_type', 'national_id');
+            formData.append('document_number', 'TEST123456789');
+            formData.append('verification_id', verificationId);
+            
+            console.log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            
+            try {
+                const response = await fetch('public/api/verification.php?action=upload-document', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const result = await response.json();
+                console.log('Upload result:', result);
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `SUCCESS!
+Message: ${result.message}
+Full result: ${JSON.stringify(result, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `FAILED!
+Message: ${result.message}
+Full result: ${JSON.stringify(result, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `ERROR!
+${error.message}
+Stack: ${error.stack}`;
+            }
+        }
+        
+        async function testDebugUpload() {
+            const resultDiv = document.getElementById('debugUploadResult');
+            const fileInput = document.getElementById('debugDocument');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = 'Please select a file first!';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing debug upload...';
+            
+            const formData = new FormData();
+            formData.append('document', fileInput.files[0]);
+            formData.append('side', 'front');
+            formData.append('document_type', 'national_id');
+            formData.append('document_number', 'TEST123456789');
+            formData.append('verification_id', 'fake_verification_id_123');
+            
+            console.log('Debug FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            
+            try {
+                const response = await fetch('public/api/debug-upload.php?action=upload-document', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                console.log('Debug Response status:', response.status);
+                
+                const result = await response.json();
+                console.log('Debug Upload result:', result);
+                
+                resultDiv.className = result.success ? 'result success' : 'result error';
+                resultDiv.innerHTML = `DEBUG UPLOAD RESULT:
+${JSON.stringify(result, null, 2)}`;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `ERROR!
+${error.message}
+Stack: ${error.stack}`;
+            }
+        }
+        
+        async function testCompleteFlow() {
+            const resultDiv = document.getElementById('completeFlowResult');
+            resultDiv.innerHTML = 'Testing complete flow...\n';
+            
+            try {
+                // Step 1: Register
+                resultDiv.innerHTML += 'Step 1: Registering user...\n';
+                await testRegistration();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Step 2: Check session
+                resultDiv.innerHTML += 'Step 2: Checking session...\n';
+                await checkSession();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Step 3: Upload document (if we have a file)
+                const fileInput = document.getElementById('testDocument');
+                if (fileInput.files[0] && testVerificationId) {
+                    resultDiv.innerHTML += 'Step 3: Uploading document...\n';
+                    await testDocumentUpload();
+                } else {
+                    resultDiv.innerHTML += 'Step 3: Skipped (no file or verification ID)\n';
+                }
+                
+                resultDiv.innerHTML += '\nComplete flow test finished!';
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML += `\nERROR in complete flow: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

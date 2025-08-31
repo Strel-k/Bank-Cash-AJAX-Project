@@ -3,8 +3,8 @@
 ob_start();
 
 // Set error reporting to prevent warnings from breaking JSON
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require_once '../../app/controllers/AuthController.php';
 require_once '../../app/helpers/Response.php';

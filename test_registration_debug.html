@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 10px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>Registration Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Auth Service Registration</h2>
+        <button onclick="testRegistration()">Test Registration</button>
+        <div id="registrationResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Session Check</h2>
+        <button onclick="testSession()">Check Session</button>
+        <div id="sessionResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Document Upload (Debug)</h2>
+        <input type="file" id="testFile" accept="image/*">
+        <button onclick="testDocumentUpload()">Test Document Upload</button>
+        <div id="uploadResult" class="result"></div>
+    </div>
+
+    <script src="public/js/auth.js"></script>
+    <script>
+        async function testRegistration() {
+            const resultDiv = document.getElementById('registrationResult');
+            resultDiv.innerHTML = 'Testing registration...';
+            
+            const testData = {
+                full_name: 'Test User',
+                phone_number: '09123456789',
+                email: 'test@example.com',
+                password: 'testpass123',
+                birthdate: '1990-01-01',
+                address: 'Test Address',
+                gender: 'male'
+            };
+            
+            try {
+                console.log('Testing registration with:', testData);
+                const result = await window.authService.register(testData);
+                console.log('Registration result:', result);
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>SUCCESS!</strong><br>
+                        Message: ${result.data.message || 'Registration successful'}<br>
+                        Data: ${JSON.stringify(result.data, null, 2)}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>FAILED!</strong><br>
+                        Message: ${result.message}<br>
+                        Full result: ${JSON.stringify(result, null, 2)}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>ERROR!</strong><br>
+                    ${error.message}<br>
+                    Stack: ${error.stack}
+                `;
+            }
+        }
+        
+        async function testSession() {
+            const resultDiv = document.getElementById('sessionResult');
+            resultDiv.innerHTML = 'Checking session...';
+            
+            try {
+                const response = await fetch('public/api/auth.php?action=check', {
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>SESSION ACTIVE!</strong><br>
+                        User ID: ${result.data.user_id}<br>
+                        Full Name: ${result.data.full_name}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>NO SESSION!</strong><br>
+                        Message: ${result.message}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>ERROR!</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+        
+        async function testDocumentUpload() {
+            const resultDiv = document.getElementById('uploadResult');
+            const fileInput = document.getElementById('testFile');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = 'Please select a file first!';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Testing document upload...';
+            
+            const formData = new FormData();
+            formData.append('document', fileInput.files[0]);
+            formData.append('side', 'front');
+            formData.append('document_type', 'national_id');
+            formData.append('document_number', 'TEST123456');
+            formData.append('verification_id', 'test_verification_id');
+            
+            try {
+                const response = await fetch('public/api/debug-verification.php?action=upload-document', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>SUCCESS!</strong><br>
+                        Message: ${result.message}<br>
+                        Debug: ${JSON.stringify(result.debug, null, 2)}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>FAILED!</strong><br>
+                        Message: ${result.message}<br>
+                        Debug: ${JSON.stringify(result.debug, null, 2)}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>ERROR!</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
