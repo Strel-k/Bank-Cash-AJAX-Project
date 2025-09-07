@@ -113,9 +113,6 @@ debug_*.html
 
 # Other development files
 .blackboxrules
-final_*.md
-fix_*.md
-TODO-fix-*.md
 
 # ===== AI MODEL FILES =====
 # Large AI model files (should be downloaded separately)
