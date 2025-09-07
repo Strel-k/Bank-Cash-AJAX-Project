@@ -17,6 +17,8 @@ class Config {
     // Payment settings
     const MIN_TRANSFER_AMOUNT = 1.00;
     const MAX_TRANSFER_AMOUNT = 50000.00;
+    const MAX_ADD_MONEY_AMOUNT = 100000.00;
+    const MAX_BILL_PAYMENT_AMOUNT = 50000.00;
     const TRANSACTION_FEE = 0.00; // Free for now
     
     // API settings

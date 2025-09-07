@@ -36,10 +36,21 @@ try {
         pin_hash VARCHAR(255),
         profile_picture VARCHAR(255),
         is_verified BOOLEAN DEFAULT FALSE,
+        login_attempts INT DEFAULT 0,
+        last_login_attempt TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
     echo "✓ Users table created or exists\n";
+
+    // Add login attempt fields to existing users table if they don't exist
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS login_attempts INT DEFAULT 0");
+        $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_attempt TIMESTAMP NULL");
+        echo "✓ Login attempt fields added to users table\n";
+    } catch (PDOException $e) {
+        echo "⚠️ Could not add login attempt fields (might already exist): " . $e->getMessage() . "\n";
+    }
     
     // Create wallets table
     $pdo->exec("CREATE TABLE IF NOT EXISTS wallets (

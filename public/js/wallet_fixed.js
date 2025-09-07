@@ -1,4 +1,4 @@
-// Wallet JavaScript for B-Cash - Fixed version with session cookies
+// Wallet JavaScript for B-Cash - Fixed version with token handling
 class WalletService {
     constructor() {
         this.apiUrl = 'http://localhost/bcash/public/api/wallet.php';

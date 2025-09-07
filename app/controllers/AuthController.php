@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Verification.php';
 require_once __DIR__ . '/../helpers/Response.php';
+require_once __DIR__ . '/../helpers/SessionHelper.php';
 require_once __DIR__ . '/../services/IDVerificationService.php';
 require_once __DIR__ . '/../services/FaceRecognitionService.php';
 
@@ -16,11 +17,8 @@ class AuthController {
         $this->verificationModel = new Verification();
         $this->idVerificationService = new IDVerificationService();
         $this->faceRecognitionService = new FaceRecognitionService();
-        
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+
+        // Session is now handled by SessionHelper
     }
     
     public function register() {
@@ -117,8 +115,9 @@ class AuthController {
                 
                 // Start verification process if document data is provided
                 // Set session variables for authentication
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['full_name'] = $full_name;
+                SessionHelper::setUserSession($userId, [
+                    'full_name' => $full_name
+                ]);
                 
                 // Always create a verification request for document uploads
                 $verificationResult = $this->startVerificationProcess(
@@ -181,33 +180,38 @@ class AuthController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Response::error('Method not allowed', 405);
         }
-        
+
         $data = json_decode(file_get_contents('php://input'), true);
-        
+
         if (!isset($data['phone_number']) || !isset($data['password'])) {
             Response::error('Phone number and password are required');
         }
-        
+
         $phone_number = trim($data['phone_number']);
         $password = $data['password'];
-        
+
         $result = $this->userModel->login($phone_number, $password);
-        
+
         if ($result['success']) {
-            $_SESSION['user_id'] = $result['user']['id'];
-            $_SESSION['full_name'] = $result['user']['full_name'];
-            
+            SessionHelper::setUserSession($result['user']['id'], [
+                'full_name' => $result['user']['full_name']
+            ]);
+
+            error_log("Login successful: user_id=" . $result['user']['id'] . ", session_id=" . session_id());
+
             Response::success([
                 'user' => $result['user'],
                 'token' => session_id()
             ], $result['message'] ?? 'Login successful');
         } else {
-            Response::error($result['message'], 401);
+            // Handle rate limiting with appropriate HTTP status
+            $statusCode = isset($result['rate_limited']) && $result['rate_limited'] ? 429 : 401;
+            Response::error($result['message'], $statusCode);
         }
     }
     
     public function logout() {
-        session_destroy();
+        SessionHelper::clearUserSession();
         Response::success([], 'Logged out successfully');
     }
     
@@ -259,16 +263,15 @@ class AuthController {
     }
     
     public function checkAuth() {
-        if (!isset($_SESSION['user_id']) || 
-            $_SESSION['ip'] !== $_SERVER['REMOTE_ADDR'] ||
-            $_SESSION['user_agent'] !== $_SERVER['HTTP_USER_AGENT']) {
-            session_destroy();
-            Response::unauthorized('Session validation failed');
+        // For cross-origin requests, we need to be more lenient with session validation
+        $userId = SessionHelper::getCurrentUserId();
+        if (!$userId) {
+            Response::unauthorized('Authentication required');
         }
-        
+
         Response::success([
-            'user_id' => $_SESSION['user_id'],
-            'full_name' => $_SESSION['full_name']
+            'user_id' => $userId,
+            'full_name' => isset($_SESSION['full_name']) ? $_SESSION['full_name'] : ''
         ]);
     }
 }

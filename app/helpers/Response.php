@@ -5,13 +5,19 @@ class Response {
         if (ob_get_length()) {
             ob_clean();
         }
-        
+
+        // Set CORS headers
+        header('Access-Control-Allow-Origin: http://localhost:3000');
+        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization');
+        header('Access-Control-Allow-Credentials: true');
+
         http_response_code($status);
         header('Content-Type: application/json');
-        
+
         // Ensure no errors are displayed
         ini_set('display_errors', 0);
-        
+
         echo json_encode($data);
         exit;
     }

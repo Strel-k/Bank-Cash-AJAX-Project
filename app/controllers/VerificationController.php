@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/Verification.php';
 require_once __DIR__ . '/../helpers/Response.php';
+require_once __DIR__ . '/../helpers/SessionHelper.php';
 
 class VerificationController {
     private $verificationModel;
@@ -10,13 +11,11 @@ class VerificationController {
     }
     
     private function checkAuth() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (!isset($_SESSION['user_id'])) {
+        $userId = SessionHelper::getCurrentUserId();
+        if (!$userId) {
             Response::unauthorized('Authentication required');
         }
-        return $_SESSION['user_id'];
+        return $userId;
     }
     
     public function startVerification() {

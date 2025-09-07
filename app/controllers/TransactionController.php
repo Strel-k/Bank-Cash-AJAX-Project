@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/Transaction.php';
 require_once __DIR__ . '/../helpers/Response.php';
+require_once __DIR__ . '/../helpers/SessionHelper.php';
 
 class TransactionController {
     private $transactionModel;
@@ -10,11 +11,11 @@ class TransactionController {
     }
     
     private function checkAuth() {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
+        $userId = SessionHelper::getCurrentUserId();
+        if (!$userId) {
             Response::unauthorized('Authentication required');
         }
-        return $_SESSION['user_id'];
+        return $userId;
     }
     
     public function getHistory() {

@@ -68,16 +68,27 @@ class User {
     public function login($phone_number, $password) {
         try {
             $stmt = $this->db->prepare("
-                SELECT id, password_hash, full_name, is_verified 
-                FROM users 
+                SELECT id, password_hash, full_name, is_verified, login_attempts, last_login_attempt
+                FROM users
                 WHERE phone_number = ?
             ");
             $stmt->execute([$phone_number]);
-            
+
             if ($stmt->rowCount() === 1) {
                 $user = $stmt->fetch();
-                
+
+                // Check rate limiting
+                if ($this->isRateLimited($user)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Too many failed attempts. Please try again later.',
+                        'rate_limited' => true
+                    ];
+                }
+
                 if (password_verify($password, $user['password_hash'])) {
+                    // Successful login - reset attempts
+                    $this->resetLoginAttempts($user['id']);
                     return [
                         'success' => true,
                         'user' => [
@@ -86,13 +97,65 @@ class User {
                             'is_verified' => $user['is_verified']
                         ]
                     ];
+                } else {
+                    // Failed login - increment attempts
+                    $this->incrementLoginAttempts($user['id']);
                 }
             }
-            
+
             return ['success' => false, 'message' => 'Invalid credentials'];
-            
+
         } catch(PDOException $e) {
             return ['success' => false, 'message' => 'Login failed: ' . $e->getMessage()];
+        }
+    }
+
+    private function isRateLimited($user) {
+        if ($user['login_attempts'] >= 3) {
+            if ($user['last_login_attempt']) {
+                $lastAttempt = strtotime($user['last_login_attempt']);
+                $now = time();
+                $timeDiff = $now - $lastAttempt;
+
+                if ($timeDiff < 30) { // 30 seconds
+                    return true;
+                } else {
+                    // Reset attempts after cooldown
+                    $this->resetLoginAttempts($user['id']);
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    private function incrementLoginAttempts($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE users
+                SET login_attempts = login_attempts + 1,
+                    last_login_attempt = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([$userId]);
+        } catch(PDOException $e) {
+            // Log error but don't fail the login process
+            error_log("Failed to increment login attempts: " . $e->getMessage());
+        }
+    }
+
+    private function resetLoginAttempts($userId) {
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE users
+                SET login_attempts = 0,
+                    last_login_attempt = NULL
+                WHERE id = ?
+            ");
+            $stmt->execute([$userId]);
+        } catch(PDOException $e) {
+            // Log error but don't fail the login process
+            error_log("Failed to reset login attempts: " . $e->getMessage());
         }
     }
     

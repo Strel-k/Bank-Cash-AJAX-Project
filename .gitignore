@@ -98,12 +98,24 @@ debug_*.php
 check_*.php
 demo.php
 install.php
+final_*.php
+find_*.php
+fix_*.php
+run-*.php
+download-*.php
+simple_*.php
 
 # Test HTML files
 test_*.html
 debug_*.html
 *_test.html
 *_debug.html
+
+# Other development files
+.blackboxrules
+final_*.md
+fix_*.md
+TODO-fix-*.md
 
 # ===== AI MODEL FILES =====
 # Large AI model files (should be downloaded separately)

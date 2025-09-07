@@ -34,7 +34,7 @@ require_once __DIR__ . '/../app/config/Config.php';
                     <p style="color: #666;">Sign in to your B-Cash account</p>
                 </div>
                 
-                <form id="loginForm" method="POST">
+                <form id="loginForm" class="login-form" method="POST" action="javascript:void(0);">
                     <div class="form-group">
                         <label class="form-label" for="phone_number">
                             <i class="fas fa-phone"></i> Phone Number
@@ -80,5 +80,20 @@ require_once __DIR__ . '/../app/config/Config.php';
     </main>
 
 <script src="js/auth.js"></script>
+<script>
+    // Simple debug script to verify form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            console.log('Login form found and attached');
+            loginForm.addEventListener('submit', function(e) {
+                console.log('Form submit event triggered');
+                // Don't prevent default here, let auth.js handle it
+            });
+        } else {
+            console.log('Login form not found');
+        }
+    });
+</script>
 </body>
 </html>

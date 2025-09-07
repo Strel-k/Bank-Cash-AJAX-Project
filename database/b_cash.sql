@@ -12,6 +12,8 @@ CREATE TABLE users (
     pin_hash VARCHAR(255),
     profile_picture VARCHAR(255),
     is_verified BOOLEAN DEFAULT FALSE,
+    login_attempts INT DEFAULT 0,
+    last_login_attempt TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

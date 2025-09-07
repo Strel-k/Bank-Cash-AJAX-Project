@@ -1,14 +1,25 @@
 <?php
-session_start();
+require_once __DIR__ . '/../app/helpers/SessionHelper.php';
+SessionHelper::configureSession();
+
 require_once __DIR__ . '/../app/config/Config.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 
+// Debug session information
+error_log("Index.php - Session ID: " . session_id());
+error_log("Index.php - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
+error_log("Index.php - Session full_name: " . (isset($_SESSION['full_name']) ? $_SESSION['full_name'] : 'not set'));
+error_log("Index.php - Session status: " . session_status());
+error_log("Index.php - All session data: " . print_r($_SESSION, true));
+
 // Check if user is authenticated
 if (!isset($_SESSION['user_id'])) {
+    error_log("Index.php - User not authenticated, redirecting to login.php");
     header('Location: login.php');
     exit();
 }
 
+error_log("Index.php - User authenticated, proceeding to load page");
 $authController = new AuthController();
 ?>
 
@@ -108,6 +119,69 @@ $authController = new AuthController();
         </div>
     </main>
 
+    <!-- Modals -->
+    <!-- Send Money Modal -->
+    <div id="sendMoneyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('sendMoneyModal')">&times;</span>
+            <h2>Send Money</h2>
+            <form id="sendMoneyForm">
+                <label for="receiver_account">Receiver Account Number:</label>
+                <input type="text" id="receiver_account" name="receiver_account" required>
+                
+                <label for="amount">Amount:</label>
+                <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
+                
+                <label for="description">Description (optional):</label>
+                <textarea id="description" name="description"></textarea>
+                
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receive Money Modal -->
+    <div id="receiveMoneyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('receiveMoneyModal')">&times;</span>
+            <h2>Receive Money</h2>
+            <p>Show your QR code or account number here for others to send money.</p>
+            <div id="qrCodeContainer"></div>
+            <p>Account Number: <span id="userAccountNumber"></span></p>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+    <div id="addMoneyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addMoneyModal')">&times;</span>
+            <h2>Add Money</h2>
+            <form id="addMoneyForm">
+                <label for="add_amount">Amount:</label>
+                <input type="number" id="add_amount" name="amount" min="0.01" step="0.01" required>
+                
+                <button type="submit">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pay Bills Modal -->
+    <div id="payBillsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('payBillsModal')">&times;</span>
+            <h2>Pay Bills</h2>
+            <form id="payBillsForm">
+                <label for="bill_account">Bill Account Number:</label>
+                <input type="text" id="bill_account" name="bill_account" required>
+                
+                <label for="bill_amount">Amount:</label>
+                <input type="number" id="bill_amount" name="amount" min="0.01" step="0.01" required>
+                
+                <button type="submit">Pay</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Initialize balance and transactions
         async function refreshBalance() {
@@ -185,19 +259,43 @@ $authController = new AuthController();
         }
 
         function sendMoney() {
-            alert('Send Money feature coming soon!');
+            openModal('sendMoneyModal');
         }
 
         function receiveMoney() {
-            alert('Receive Money feature coming soon!');
+            openModal('receiveMoneyModal');
         }
 
         function addMoney() {
-            alert('Add Money feature coming soon!');
+            openModal('addMoneyModal');
         }
 
         function payBills() {
-            alert('Pay Bills feature coming soon!');
+            openModal('payBillsModal');
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         }
 
         // Load initial data

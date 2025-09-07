@@ -1,19 +1,30 @@
 <?php
-// Start output buffering to prevent any unwanted output
+// Start output buffering FIRST to prevent any unwanted output
 ob_start();
 
 // Set error reporting to prevent warnings from breaking JSON
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Configure session with standardized settings BEFORE any output
+require_once '../../app/helpers/SessionHelper.php';
+SessionHelper::configureSession();
+
+// Debug session information
+error_log("Auth API - Session ID: " . session_id());
+error_log("Auth API - Session status: " . session_status());
+error_log("Auth API - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
+error_log("Auth API - All session data: " . print_r($_SESSION, true));
+error_log("Auth API - Cookies received: " . print_r($_COOKIE, true));
 
 require_once '../../app/controllers/AuthController.php';
 require_once '../../app/helpers/Response.php';
 
 // Set JSON headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
 
 // Handle preflight requests

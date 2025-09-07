@@ -7,6 +7,9 @@ class Wallet {
     public function __construct() {
         $database = new Database();
         $this->db = $database->connect();
+        if ($this->db === null) {
+            throw new Exception('Database connection failed');
+        }
     }
     
     public function getWalletByUserId($user_id) {
@@ -28,24 +31,33 @@ class Wallet {
     
     public function getBalance($user_id) {
         try {
+            if ($this->db === null) {
+                throw new Exception('Database connection is null');
+            }
             $stmt = $this->db->prepare("
-                SELECT balance 
-                FROM wallets 
+                SELECT balance
+                FROM wallets
                 WHERE user_id = ?
             ");
             $stmt->execute([$user_id]);
-            
+
             $result = $stmt->fetch();
             return $result ? $result['balance'] : 0;
-            
+
         } catch(PDOException $e) {
+            error_log("PDO Error in getBalance: " . $e->getMessage());
+            return 0;
+        } catch(Exception $e) {
+            error_log("Exception in getBalance: " . $e->getMessage());
             return 0;
         }
     }
     
-    public function updateBalance($user_id, $amount, $operation = 'add') {
+    public function updateBalance($user_id, $amount, $operation = 'add', $use_transaction = true) {
         try {
-            $this->db->beginTransaction();
+            if ($use_transaction) {
+                $this->db->beginTransaction();
+            }
             
             // Get current balance
             $current_balance = $this->getBalance($user_id);
@@ -58,7 +70,9 @@ class Wallet {
                 
                 // Check if sufficient balance
                 if ($new_balance < 0) {
-                    $this->db->rollBack();
+                    if ($use_transaction) {
+                        $this->db->rollBack();
+                    }
                     return ['success' => false, 'message' => 'Insufficient balance'];
                 }
             }
@@ -71,11 +85,15 @@ class Wallet {
             ");
             $stmt->execute([$new_balance, $user_id]);
             
-            $this->db->commit();
+            if ($use_transaction) {
+                $this->db->commit();
+            }
             return ['success' => true, 'new_balance' => $new_balance];
             
         } catch(PDOException $e) {
-            $this->db->rollBack();
+            if ($use_transaction) {
+                $this->db->rollBack();
+            }
             return ['success' => false, 'message' => 'Balance update failed: ' . $e->getMessage()];
         }
     }
@@ -100,39 +118,39 @@ class Wallet {
     public function transferMoney($sender_id, $receiver_account, $amount, $description = '') {
         try {
             $this->db->beginTransaction();
-            
+
             // Get sender wallet
             $sender_wallet = $this->getWalletByUserId($sender_id);
             if (!$sender_wallet) {
                 $this->db->rollBack();
                 return ['success' => false, 'message' => 'Sender wallet not found'];
             }
-            
+
             // Get receiver wallet
             $receiver_wallet = $this->getWalletByAccountNumber($receiver_account);
             if (!$receiver_wallet) {
                 $this->db->rollBack();
                 return ['success' => false, 'message' => 'Receiver account not found'];
             }
-            
+
             // Check if sender has sufficient balance
             if ($sender_wallet['balance'] < $amount) {
                 $this->db->rollBack();
                 return ['success' => false, 'message' => 'Insufficient balance'];
             }
-            
+
             // Generate unique reference number
             $reference_number = 'TXN' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            
-            // Deduct from sender
-            $this->updateBalance($sender_id, $amount, 'subtract');
-            
-            // Add to receiver
-            $this->updateBalance($receiver_wallet['user_id'], $amount, 'add');
-            
+
+            // Deduct from sender (without starting a new transaction)
+            $this->updateBalance($sender_id, $amount, 'subtract', false);
+
+            // Add to receiver (without starting a new transaction)
+            $this->updateBalance($receiver_wallet['user_id'], $amount, 'add', false);
+
             // Record transaction for sender
             $stmt = $this->db->prepare("
-                INSERT INTO transactions 
+                INSERT INTO transactions
                 (sender_wallet_id, receiver_wallet_id, amount, transaction_type, reference_number, description)
                 VALUES (?, ?, ?, 'send', ?, ?)
             ");
@@ -143,10 +161,10 @@ class Wallet {
                 $reference_number,
                 $description
             ]);
-            
+
             // Record transaction for receiver
             $stmt = $this->db->prepare("
-                INSERT INTO transactions 
+                INSERT INTO transactions
                 (sender_wallet_id, receiver_wallet_id, amount, transaction_type, reference_number, description)
                 VALUES (?, ?, ?, 'receive', ?, ?)
             ");
@@ -157,19 +175,124 @@ class Wallet {
                 $reference_number,
                 $description
             ]);
-            
+
             $this->db->commit();
-            
+
             return [
                 'success' => true,
                 'message' => 'Transfer successful',
                 'reference_number' => $reference_number,
                 'new_balance' => $sender_wallet['balance'] - $amount
             ];
-            
+
         } catch(PDOException $e) {
             $this->db->rollBack();
             return ['success' => false, 'message' => 'Transfer failed: ' . $e->getMessage()];
+        }
+    }
+
+    public function addMoney($user_id, $amount) {
+        try {
+            $this->db->beginTransaction();
+
+            // Get user wallet
+            $wallet = $this->getWalletByUserId($user_id);
+            if (!$wallet) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Wallet not found'];
+            }
+
+            // Generate unique reference number
+            $reference_number = 'ADD' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+            // Add to balance (without starting a new transaction)
+            $result = $this->updateBalance($user_id, $amount, 'add', false);
+            if (!$result['success']) {
+                $this->db->rollBack();
+                return $result;
+            }
+
+            // Record transaction
+            $stmt = $this->db->prepare("
+                INSERT INTO transactions
+                (sender_wallet_id, receiver_wallet_id, amount, transaction_type, reference_number, description)
+                VALUES (?, ?, ?, 'add_money', ?, 'Money added to wallet')
+            ");
+            $stmt->execute([
+                $wallet['id'],
+                $wallet['id'],
+                $amount,
+                $reference_number
+            ]);
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Money added successfully',
+                'reference_number' => $reference_number,
+                'new_balance' => $result['new_balance']
+            ];
+
+        } catch(PDOException $e) {
+            $this->db->rollBack();
+            return ['success' => false, 'message' => 'Add money failed: ' . $e->getMessage()];
+        }
+    }
+
+    public function payBills($user_id, $bill_account, $amount) {
+        try {
+            $this->db->beginTransaction();
+
+            // Get user wallet
+            $wallet = $this->getWalletByUserId($user_id);
+            if (!$wallet) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Wallet not found'];
+            }
+
+            // Check if user has sufficient balance
+            if ($wallet['balance'] < $amount) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Insufficient balance'];
+            }
+
+            // Generate unique reference number
+            $reference_number = 'BILL' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+            // Deduct from balance (without starting a new transaction)
+            $result = $this->updateBalance($user_id, $amount, 'subtract', false);
+            if (!$result['success']) {
+                $this->db->rollBack();
+                return $result;
+            }
+
+            // Record transaction
+            $stmt = $this->db->prepare("
+                INSERT INTO transactions
+                (sender_wallet_id, receiver_wallet_id, amount, transaction_type, reference_number, description)
+                VALUES (?, ?, ?, 'pay_bills', ?, ?)
+            ");
+            $stmt->execute([
+                $wallet['id'],
+                null,
+                $amount,
+                $reference_number,
+                "Bill payment to account: $bill_account"
+            ]);
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Bill payment successful',
+                'reference_number' => $reference_number,
+                'new_balance' => $result['new_balance']
+            ];
+
+        } catch(PDOException $e) {
+            $this->db->rollBack();
+            return ['success' => false, 'message' => 'Bill payment failed: ' . $e->getMessage()];
         }
     }
 }
