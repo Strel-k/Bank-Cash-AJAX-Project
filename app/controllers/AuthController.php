@@ -194,7 +194,8 @@ class AuthController {
 
         if ($result['success']) {
             SessionHelper::setUserSession($result['user']['id'], [
-                'full_name' => $result['user']['full_name']
+                'full_name' => $result['user']['full_name'],
+                'is_admin' => $result['user']['is_admin'] ?? false
             ]);
 
             error_log("Login successful: user_id=" . $result['user']['id'] . ", session_id=" . session_id());

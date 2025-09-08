@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 displayTransactions(result.data.transactions);
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 displayStats(result.data.stats);
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 displayTransactions(result.data.transactions);
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }

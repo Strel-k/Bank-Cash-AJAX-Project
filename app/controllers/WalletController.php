@@ -22,9 +22,15 @@ class WalletController {
     private function checkAuth() {
         error_log("Session status: " . session_status());
         error_log("Session ID: " . session_id());
+        error_log("Session save path: " . session_save_path());
 
-        $userId = SessionHelper::getCurrentUserId();
-        error_log("Session user_id: " . ($userId ?: 'not set'));
+        // Ensure session is configured
+        SessionHelper::configureSession();
+
+        // Check session data directly
+        $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+        error_log("Direct session user_id: " . ($userId ?: 'not set'));
+        error_log("All session data: " . print_r($_SESSION, true));
 
         // If session user_id is not found, check for Authorization header token
         if (!$userId) {
@@ -37,13 +43,14 @@ class WalletController {
 
                 // For now, assume token is session_id
                 if (session_id() === $token) {
-                    $userId = SessionHelper::getCurrentUserId();
+                    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
                     error_log("Token matches session, user_id: " . ($userId ?: 'not set'));
                 }
             }
         }
 
         if (!$userId) {
+            error_log("Authentication failed - no user_id found");
             Response::unauthorized('Authentication required');
         }
         return $userId;
@@ -79,15 +86,21 @@ class WalletController {
     }
     
     public function transferMoney() {
+        error_log("WalletController::transferMoney called");
         $user_id = $this->checkAuth();
+        error_log("Authenticated user_id: " . $user_id);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid method: " . $_SERVER['REQUEST_METHOD']);
             Response::error('Method not allowed', 405);
         }
         
-        $data = json_decode(file_get_contents('php://input'), true);
+        $rawInput = file_get_contents('php://input');
+        error_log("Raw input: " . $rawInput);
+        $data = json_decode($rawInput, true);
         
         if (!isset($data['receiver_account']) || !isset($data['amount'])) {
+            error_log("Missing receiver_account or amount");
             Response::error('Receiver account and amount are required');
         }
         
@@ -95,22 +108,29 @@ class WalletController {
         $amount = floatval($data['amount']);
         $description = isset($data['description']) ? trim($data['description']) : '';
         
+        error_log("Transfer details - receiver_account: $receiver_account, amount: $amount, description: $description");
+        
         // Validate amount
         if ($amount <= 0) {
+            error_log("Invalid amount: $amount");
             Response::error('Amount must be greater than 0');
         }
         
         if ($amount > Config::MAX_TRANSFER_AMOUNT) {
+            error_log("Amount exceeds max limit: $amount");
             Response::error('Amount exceeds maximum limit');
         }
         
         // Check if receiver is not the same as sender
         $sender_wallet = $this->walletModel->getWalletByUserId($user_id);
         if ($sender_wallet['account_number'] === $receiver_account) {
+            error_log("Attempt to transfer to own account");
             Response::error('Cannot transfer to your own account');
         }
         
         $result = $this->walletModel->transferMoney($user_id, $receiver_account, $amount, $description);
+        
+        error_log("Transfer result: " . json_encode($result));
         
         if ($result['success']) {
             Response::success([
@@ -135,7 +155,12 @@ class WalletController {
             Response::error('Account number is required');
         }
 
+        // First try to find by account number
         $wallet = $this->walletModel->getWalletByAccountNumber($account_number);
+        // If not found, try to find by phone number
+        if (!$wallet) {
+            $wallet = $this->walletModel->getWalletByPhoneNumber($account_number);
+        }
 
         if (!$wallet) {
             Response::error('Account not found');

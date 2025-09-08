@@ -9,38 +9,27 @@ class SessionHelper {
         $isCli = (php_sapi_name() === 'cli');
 
         if (!$isCli) {
-            // Force set session save path
-            $sessionPath = sys_get_temp_dir() . '/php_sessions';
+            // Force set session save path to a writable directory
+            $sessionPath = __DIR__ . '/../../sessions';
             if (!is_dir($sessionPath)) {
                 mkdir($sessionPath, 0755, true);
             }
             session_save_path($sessionPath);
 
-            // Determine if we're on localhost
-            $isLocalhost = (isset($_SERVER['HTTP_HOST']) &&
-                           ($_SERVER['HTTP_HOST'] === 'localhost' ||
-                            $_SERVER['HTTP_HOST'] === '127.0.0.1' ||
-                            strpos($_SERVER['HTTP_HOST'], 'localhost') !== false));
-
-            // Set consistent session cookie parameters
+            // Set session cookie parameters for localhost
             session_set_cookie_params([
-                'lifetime' => 0,  // Session cookie (expires when browser closes)
-                'path' => '/',    // Root path to work across subdirectories
-                'domain' => $isLocalhost ? '' : $_SERVER['HTTP_HOST'], // Empty for localhost
-                'secure' => false,  // Set to false to allow HTTP on localhost and testing
-                'httponly' => false,  // Set to false to allow JavaScript access for debugging
-                'samesite' => $isLocalhost ? 'Lax' : 'None'  // Lax for localhost, None for cross-origin
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => false,
+                'httponly' => false,
+                'samesite' => 'Lax'
             ]);
         }
 
         // Start the session if not already started
         if (session_status() === PHP_SESSION_NONE) {
-            if (headers_sent()) {
-                // Headers already sent, cannot start session with custom params
-                session_start();
-            } else {
-                session_start();
-            }
+            session_start();
         }
     }
 

@@ -1,4 +1,5 @@
 <?php
+// Configure session FIRST before any output
 require_once __DIR__ . '/../app/helpers/SessionHelper.php';
 SessionHelper::configureSession();
 
@@ -33,7 +34,7 @@ $authController = new AuthController();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="js/auth.js"></script>
-    <script src="js/wallet.js"></script>
+    <script src="js/wallet_session.js"></script>
     <script src="js/transaction.js"></script>
 </head>
 <body>

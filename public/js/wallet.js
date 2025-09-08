@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 balanceDisplay.innerText = `Balance: ₱${result.data.balance}`;
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -113,10 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.transferMoney(transferData);
 
             if (result.success) {
-                alert('Transfer successful! Reference: ' + result.data.reference_number);
+                // Removed alert for better UX
                 window.location.reload();
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -133,9 +133,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.searchAccount(account);
 
             if (result.success) {
-                alert(`Account found: ${result.data.full_name}`);
+                // Removed alert for better UX
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -156,12 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.transferMoney(transferData);
 
             if (result.success) {
-                alert('Transfer successful! Reference: ' + result.data.reference_number);
+                // Removed alert for better UX
                 closeModal('sendMoneyModal');
                 refreshBalance();
                 loadTransactionHistory();
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -178,12 +178,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.addMoney(amount);
 
             if (result.success) {
-                alert('Money added successfully!');
+                // Removed alert for better UX
                 closeModal('addMoneyModal');
                 refreshBalance();
                 loadTransactionHistory();
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -201,12 +201,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.payBills(billAccount, amount);
 
             if (result.success) {
-                alert('Bill payment successful!');
+                // Removed alert for better UX
                 closeModal('payBillsModal');
                 refreshBalance();
                 loadTransactionHistory();
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }

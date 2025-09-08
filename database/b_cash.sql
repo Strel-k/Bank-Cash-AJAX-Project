@@ -36,7 +36,7 @@ CREATE TABLE transactions (
     sender_wallet_id INT NOT NULL,
     receiver_wallet_id INT NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
-    transaction_type ENUM('send', 'receive', 'topup', 'withdraw') NOT NULL,
+    transaction_type ENUM('send', 'receive', 'topup', 'withdraw', 'add_money', 'pay_bills') NOT NULL,
     reference_number VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',

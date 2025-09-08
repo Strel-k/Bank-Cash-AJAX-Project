@@ -68,7 +68,7 @@ class User {
     public function login($phone_number, $password) {
         try {
             $stmt = $this->db->prepare("
-                SELECT id, password_hash, full_name, is_verified, login_attempts, last_login_attempt
+                SELECT id, password_hash, full_name, is_verified, login_attempts, last_login_attempt, is_admin
                 FROM users
                 WHERE phone_number = ?
             ");
@@ -94,7 +94,8 @@ class User {
                         'user' => [
                             'id' => $user['id'],
                             'full_name' => $user['full_name'],
-                            'is_verified' => $user['is_verified']
+                            'is_verified' => $user['is_verified'],
+                            'is_admin' => $user['is_admin']
                         ]
                     ];
                 } else {

@@ -81,9 +81,8 @@ class AuthService {
                 credentials: 'include' // Added to include cookies for session
             });
             const result = await response.json();
-            
+
             if (result.success) {
-                localStorage.removeItem('b_cash_token');
                 return { success: true };
             }
         } catch (error) {
@@ -119,10 +118,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await authService.register(userData);
             
             if (result.success) {
-                alert('Registration successful!');
+                // Removed alert for better UX
                 window.location.href = '/login.php';
             } else {
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }
@@ -149,10 +148,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 console.log('Login successful, redirecting to index.php');
+                // Use replace to avoid back button issues and ensure session is maintained
                 window.location.replace('index.php');
             } else {
                 console.log('Login failed:', result.message);
-                alert(result.message);
+                // Removed alert for better UX
             }
         });
     }

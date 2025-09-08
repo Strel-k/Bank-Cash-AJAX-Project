@@ -2,13 +2,13 @@
 // Start output buffering FIRST to prevent any unwanted output
 ob_start();
 
-// Set error reporting to prevent warnings from breaking JSON
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Configure session with standardized settings BEFORE any output
 require_once '../../app/helpers/SessionHelper.php';
 SessionHelper::configureSession();
+
+// Set error reporting to prevent warnings from breaking JSON
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Debug session information
 error_log("Auth API - Session ID: " . session_id());
