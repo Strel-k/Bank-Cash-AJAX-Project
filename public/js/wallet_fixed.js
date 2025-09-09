@@ -1,7 +1,7 @@
 // Wallet JavaScript for B-Cash - Fixed version with token handling
 class WalletService {
     constructor() {
-        this.apiUrl = 'http://localhost/bcash/public/api/wallet.php';
+        this.apiUrl = '/api/wallet.php';
     }
 
     async getBalance() {

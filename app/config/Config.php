@@ -8,7 +8,7 @@ class Config {
     
     // Application settings
     const APP_NAME = 'B-Cash';
-    const APP_URL = 'http://localhost/b-cash';
+    const APP_URL = 'http://localhost';
     
     // Security settings
     const JWT_SECRET = 'your-secret-key-change-this';

@@ -11,11 +11,36 @@ class TransactionController {
     }
     
     private function checkAuth() {
-        $userId = SessionHelper::getCurrentUserId();
-        if (!$userId) {
-            Response::unauthorized('Authentication required');
+        error_log("TransactionController::checkAuth - Starting auth check");
+        
+        // First try to get user ID directly from session
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            error_log("TransactionController::checkAuth - Found user_id in session: " . $userId);
+            return $userId;
         }
-        return $userId;
+        
+        error_log("TransactionController::checkAuth - No active session user_id, checking headers");
+        
+        // Try to get authorization from headers
+        $headers = getallheaders();
+        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+        
+        if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+            error_log("TransactionController::checkAuth - Found bearer token: " . $token);
+            
+            // Validate the session and check if it matches the token
+            if (session_id() && session_id() === $token && isset($_SESSION['user_id'])) {
+                $userId = $_SESSION['user_id'];
+                error_log("TransactionController::checkAuth - Valid token auth for user: " . $userId);
+                return $userId;
+            }
+        }
+
+        error_log("TransactionController::checkAuth - Authentication failed");
+        Response::unauthorized('Please log in to view your transactions');
+        return null;
     }
     
     public function getHistory() {

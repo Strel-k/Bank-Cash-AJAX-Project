@@ -177,36 +177,66 @@ class AuthController {
     }
     
     public function login() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            Response::error('Method not allowed', 405);
-        }
+        try {
+            error_log("AuthController::login - Starting login process");
+            
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                error_log("AuthController::login - Invalid method: " . $_SERVER['REQUEST_METHOD']);
+                Response::error('Method not allowed', 405);
+                return;
+            }
 
-        $data = json_decode(file_get_contents('php://input'), true);
+            $data = json_decode(file_get_contents('php://input'), true);
+            error_log("AuthController::login - Received data: " . print_r($data, true));
 
-        if (!isset($data['phone_number']) || !isset($data['password'])) {
-            Response::error('Phone number and password are required');
-        }
+            if (!isset($data['phone_number']) || !isset($data['password'])) {
+                error_log("AuthController::login - Missing required fields");
+                Response::error('Phone number and password are required');
+                return;
+            }
 
-        $phone_number = trim($data['phone_number']);
-        $password = $data['password'];
+            $phone_number = trim($data['phone_number']);
+            $password = $data['password'];
 
-        $result = $this->userModel->login($phone_number, $password);
-
-        if ($result['success']) {
-            SessionHelper::setUserSession($result['user']['id'], [
-                'full_name' => $result['user']['full_name']
-            ]);
-
-            error_log("Login successful: user_id=" . $result['user']['id'] . ", session_id=" . session_id());
-
-            Response::success([
-                'user' => $result['user'],
-                'token' => session_id()
-            ], $result['message'] ?? 'Login successful');
-        } else {
-            // Handle rate limiting with appropriate HTTP status
-            $statusCode = isset($result['rate_limited']) && $result['rate_limited'] ? 429 : 401;
-            Response::error($result['message'], $statusCode);
+            error_log("AuthController::login - Attempting login for phone: " . $phone_number);
+            
+            $result = $this->userModel->login($phone_number, $password);
+            
+            if ($result['success']) {
+                // Start a fresh session
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_regenerate_id(true);
+                }
+                
+                $user = $result['user'];
+                $isAdmin = (bool)($user['is_admin'] ?? false);
+                
+                // Set user session data
+                SessionHelper::setUserSession($user['id'], [
+                    'full_name' => $user['full_name'],
+                    'is_admin' => $isAdmin
+                ]);
+                
+                error_log("AuthController::login - Login successful. Session data: " . print_r($_SESSION, true));
+                
+                // Return success response with token and verification status
+                Response::success([
+                    'user' => [
+                        'id' => $user['id'],
+                        'full_name' => $user['full_name'],
+                        'is_verified' => $user['is_verified'] ?? false,
+                        'is_admin' => $isAdmin
+                    ],
+                    'token' => session_id()
+                ], 'Login successful');
+            } else {
+                // Handle rate limiting with appropriate HTTP status
+                $statusCode = isset($result['rate_limited']) && $result['rate_limited'] ? 429 : 401;
+                Response::error($result['message'], $statusCode);
+            }
+        } catch (Exception $e) {
+            error_log("AuthController::login - Error: " . $e->getMessage());
+            Response::error('Login failed. Please try again.');
         }
     }
     

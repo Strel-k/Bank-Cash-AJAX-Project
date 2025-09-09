@@ -3,7 +3,7 @@ console.log('Auth.js loaded successfully');
 
 class AuthService {
     constructor() {
-        this.apiUrl = 'api/auth.php'; // Changed to relative URL
+        this.apiUrl = '/public/api/auth.php'; // Root path to public API
     }
     
     async register(userData) {
@@ -16,7 +16,9 @@ class AuthService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(userData),
                 credentials: 'include' // Added to include cookies for session
             });
@@ -42,28 +44,62 @@ class AuthService {
     
     async login(credentials) {
         try {
-            console.log('AuthService: Starting login...');
-            console.log('AuthService: API URL:', `${this.apiUrl}?action=login`);
-            console.log('AuthService: Credentials:', credentials);
-
-            const response = await fetch(`${this.apiUrl}?action=login`, {
+            console.log('AuthService: Starting login process');
+            const requestUrl = `${this.apiUrl}?action=login`;
+            console.log('AuthService: Full request URL:', new URL(requestUrl, window.location.href).href);
+            console.log('AuthService: Credentials:', JSON.stringify(credentials));
+            
+            // First, check if we're already logged in
+            if (localStorage.getItem('user_id')) {
+                console.log('AuthService: Found existing user_id, clearing it');
+                localStorage.removeItem('user_id');
+            }
+            
+            console.log('AuthService: Sending fetch request...');
+            const response = await fetch(requestUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify(credentials),
-                credentials: 'include' // Added to include cookies for session
+                credentials: 'include',
+                mode: 'cors',
+                cache: 'no-cache'
+            });
+            
+            console.log('AuthService: Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
             });
 
             console.log('AuthService: Response status:', response.status);
-            console.log('AuthService: Response headers:', response.headers);
+            
+            // Try to get response text regardless of status
+            const responseText = await response.text();
+            console.log('AuthService: Raw response:', responseText);
 
-            const result = await response.json();
-            console.log('AuthService: Login result:', result);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}, response: ${responseText}`);
+            }
+            
+            let result;
+            try {
+                result = JSON.parse(responseText);
+                console.log('AuthService: Parsed response:', result);
+            } catch (e) {
+                console.error('AuthService: Failed to parse JSON response:', e);
+                throw new Error('Invalid JSON response from server');
+            }
 
             if (result.success) {
                 console.log('AuthService: Login successful');
-                // Session cookie is automatically handled by browser
+                // Store user data
+                if (result.data && result.data.user_id) {
+                    localStorage.setItem('user_id', result.data.user_id);
+                }
                 return { success: true, data: result.data };
             } else {
                 console.log('AuthService: Login failed:', result.message);
@@ -131,28 +167,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent form from submitting normally
+            
+            try {
+                console.log('Login form submitted');
+                
+                // Disable form while processing
+                const submitButton = this.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                
+                const formData = new FormData(this);
+                const credentials = {
+                    phone_number: formData.get('phone_number'),
+                    password: formData.get('password')
+                };
 
-            console.log('Login form submitted');
+                console.log('Login credentials:', credentials);
+                
+                const result = await authService.login(credentials);
+                console.log('Login result:', result);
 
-            const formData = new FormData(this);
-            const credentials = {
-                phone_number: formData.get('phone_number'),
-                password: formData.get('password')
-            };
-
-            console.log('Login credentials:', credentials);
-
-            const result = await authService.login(credentials);
-
-            console.log('Login result:', result);
-
-            if (result.success) {
-                console.log('Login successful, redirecting to index.php');
-                window.location.replace('index.php');
-            } else {
-                console.log('Login failed:', result.message);
-                alert(result.message);
+                if (result.success && result.data) {
+                    console.log('Login successful, preparing redirect...');
+                    
+                    // Store any necessary data
+                    if (result.data.user && result.data.user.id) {
+                        localStorage.setItem('user_id', result.data.user.id);
+                    }
+                    
+                    // Determine redirect based on user type
+                    const isAdmin = result.data.user && result.data.user.is_admin === true;
+                    const redirectUrl = isAdmin ? 'admin.php' : 'index.php';
+                    
+                    console.log(`Redirecting to ${redirectUrl}...`);
+                    window.location.href = redirectUrl;
+                } else {
+                    console.log('Login failed:', result.message);
+                    alert(result.message || 'Login failed. Please try again.');
+                    submitButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+                submitButton.disabled = false;
             }
         });
     }

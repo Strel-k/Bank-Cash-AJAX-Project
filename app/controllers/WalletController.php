@@ -20,33 +20,36 @@ class WalletController {
     }
     
     private function checkAuth() {
-        error_log("Session status: " . session_status());
-        error_log("Session ID: " . session_id());
-
-        $userId = SessionHelper::getCurrentUserId();
-        error_log("Session user_id: " . ($userId ?: 'not set'));
-
-        // If session user_id is not found, check for Authorization header token
-        if (!$userId) {
-            $headers = getallheaders();
-            $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-
-            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                $token = $matches[1];
-                error_log("Token found in Authorization header: " . $token);
-
-                // For now, assume token is session_id
-                if (session_id() === $token) {
-                    $userId = SessionHelper::getCurrentUserId();
-                    error_log("Token matches session, user_id: " . ($userId ?: 'not set'));
-                }
+        error_log("WalletController::checkAuth - Starting auth check");
+        
+        // First try to get user ID directly from session
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            error_log("WalletController::checkAuth - Found user_id in session: " . $userId);
+            return $userId;
+        }
+        
+        error_log("WalletController::checkAuth - No active session user_id, checking headers");
+        
+        // Try to get authorization from headers
+        $headers = getallheaders();
+        $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+        
+        if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+            error_log("WalletController::checkAuth - Found bearer token: " . $token);
+            
+            // Validate the session and check if it matches the token
+            if (session_id() && session_id() === $token && isset($_SESSION['user_id'])) {
+                $userId = $_SESSION['user_id'];
+                error_log("WalletController::checkAuth - Valid token auth for user: " . $userId);
+                return $userId;
             }
         }
 
-        if (!$userId) {
-            Response::unauthorized('Authentication required');
-        }
-        return $userId;
+        error_log("WalletController::checkAuth - Authentication failed");
+        Response::unauthorized('Please log in to access your wallet');
+        return null;
     }
     
     public function getBalance() {

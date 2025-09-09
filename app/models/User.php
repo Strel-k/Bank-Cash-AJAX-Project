@@ -68,7 +68,7 @@ class User {
     public function login($phone_number, $password) {
         try {
             $stmt = $this->db->prepare("
-                SELECT id, password_hash, full_name, is_verified, login_attempts, last_login_attempt
+                SELECT id, password_hash, full_name, is_verified, is_admin, login_attempts, last_login_attempt
                 FROM users
                 WHERE phone_number = ?
             ");
@@ -89,13 +89,19 @@ class User {
                 if (password_verify($password, $user['password_hash'])) {
                     // Successful login - reset attempts
                     $this->resetLoginAttempts($user['id']);
+                    
+                    // Debug log the user data
+                    error_log("User login successful - ID: " . $user['id'] . ", Is Admin: " . ($user['is_admin'] ? 'Yes' : 'No'));
+                    
                     return [
                         'success' => true,
                         'user' => [
                             'id' => $user['id'],
                             'full_name' => $user['full_name'],
-                            'is_verified' => $user['is_verified']
-                        ]
+                            'is_verified' => $user['is_verified'],
+                            'is_admin' => (bool)$user['is_admin']
+                        ],
+                        'message' => 'Login successful'
                     ];
                 } else {
                     // Failed login - increment attempts

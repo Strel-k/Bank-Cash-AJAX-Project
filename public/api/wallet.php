@@ -6,26 +6,30 @@ ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Configure session with standardized settings BEFORE any output
-require_once '../../app/helpers/SessionHelper.php';
+// Configure session BEFORE any output
+require_once __DIR__ . '/../../app/helpers/SessionHelper.php';
+require_once __DIR__ . '/../../app/helpers/Response.php';
+require_once __DIR__ . '/../../app/controllers/WalletController.php';
+
 SessionHelper::configureSession();
 
 // Debug session information
+error_log("Wallet API - Request from: " . ($_SERVER['HTTP_ORIGIN'] ?? 'Unknown'));
 error_log("Wallet API - Session ID: " . session_id());
-error_log("Wallet API - Session status: " . session_status());
-error_log("Wallet API - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
-error_log("Wallet API - All session data: " . print_r($_SESSION, true));
-error_log("Wallet API - Cookies received: " . print_r($_COOKIE, true));
+error_log("Wallet API - Session user_id: " . ($_SESSION['user_id'] ?? 'not set'));
+error_log("Wallet API - Session data: " . print_r($_SESSION, true));
 
-require_once __DIR__ . '/../../app/controllers/WalletController.php';
-require_once __DIR__ . '/../../app/helpers/Response.php';
+// First check authentication
+if (!SessionHelper::isAuthenticated()) {
+    Response::unauthorized();
+}
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', false); // Set to true in production with HTTPS
 
-// Set JSON headers
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
+// Debug session state
+error_log("Wallet API - Before processing - Session ID: " . session_id());
+error_log("Wallet API - Before processing - User ID: " . ($_SESSION['user_id'] ?? 'not set'));
+error_log("Wallet API - Request Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'not set'));
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

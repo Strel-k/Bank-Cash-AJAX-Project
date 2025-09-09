@@ -1,9 +1,9 @@
 // Transaction JavaScript for B-Cash
 class TransactionService {
     constructor() {
-        this.apiUrl = 'api/transaction.php';
+        this.apiUrl = '/public/api/transaction.php';
     }
-    
+
     async getTransactionHistory(limit = 50, offset = 0) {
         try {
             const response = await fetch(`${this.apiUrl}?action=history&limit=${limit}&offset=${offset}`, {
@@ -15,7 +15,7 @@ class TransactionService {
             return { success: false, message: 'Failed to fetch transaction history' };
         }
     }
-    
+
     async getTransactionStats() {
         try {
             const response = await fetch(`${this.apiUrl}?action=stats`, {
@@ -27,7 +27,7 @@ class TransactionService {
             return { success: false, message: 'Failed to fetch transaction stats' };
         }
     }
-    
+
     async searchTransactions(searchTerm, limit = 20) {
         try {
             const response = await fetch(`${this.apiUrl}?action=search&q=${encodeURIComponent(searchTerm)}&limit=${limit}`, {
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Stats display
     const statsContainer = document.getElementById('transactionStats');
     if (statsContainer) {
@@ -69,17 +69,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Search form
     const searchForm = document.getElementById('searchTransactionForm');
     if (searchForm) {
         searchForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const searchTerm = document.getElementById('searchTerm').value;
-            
+
             const result = await transactionService.searchTransactions(searchTerm);
-            
+
             if (result.success) {
                 displayTransactions(result.data.transactions);
             } else {
@@ -93,14 +93,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function displayTransactions(transactions) {
     const container = document.getElementById('transactionHistory');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     if (transactions.length === 0) {
         container.innerHTML = '<p>No transactions found.</p>';
         return;
     }
-    
+
     transactions.forEach(transaction => {
         const div = document.createElement('div');
         div.className = 'transaction-item';
@@ -119,7 +119,7 @@ function displayTransactions(transactions) {
 function displayStats(stats) {
     const container = document.getElementById('transactionStats');
     if (!container) return;
-    
+
     container.innerHTML = `
         <div class="stats-grid">
             <div class="stat-item">

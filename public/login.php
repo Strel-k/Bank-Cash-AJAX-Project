@@ -1,6 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/../app/helpers/SessionHelper.php';
+require_once __DIR__ . '/../app/helpers/CorsHelper.php';
 require_once __DIR__ . '/../app/config/Config.php';
+
+// Initialize session and CORS
+SessionHelper::configureSession();
+CorsHelper::handleCors();
 ?>
 
 <!DOCTYPE html>
@@ -81,17 +86,10 @@ require_once __DIR__ . '/../app/config/Config.php';
 
 <script src="js/auth.js"></script>
 <script>
-    // Simple debug script to verify form submission
     document.addEventListener('DOMContentLoaded', function() {
         const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            console.log('Login form found and attached');
-            loginForm.addEventListener('submit', function(e) {
-                console.log('Form submit event triggered');
-                // Don't prevent default here, let auth.js handle it
-            });
-        } else {
-            console.log('Login form not found');
+        if (!loginForm) {
+            console.error('Login form not found');
         }
     });
 </script>

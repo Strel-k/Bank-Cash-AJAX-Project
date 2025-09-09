@@ -1,20 +1,57 @@
 <?php
-// Start output buffering to prevent any unwanted output
+// Start output buffering
 ob_start();
 
-// Set error reporting to prevent warnings from breaking JSON
-error_reporting(0);
-ini_set('display_errors', 0);
+// Configure session BEFORE any output
+require_once __DIR__ . '/../../app/helpers/SessionHelper.php';
+require_once __DIR__ . '/../../app/helpers/Response.php';
+require_once __DIR__ . '/../../app/controllers/TransactionController.php';
 
-require_once '../../app/controllers/TransactionController.php';
-require_once '../../app/helpers/Response.php';
+SessionHelper::configureSession();
 
-// Set JSON headers
+// Debug session information
+error_log("Transaction API - Request from: " . ($_SERVER['HTTP_ORIGIN'] ?? 'Unknown'));
+error_log("Transaction API - Session ID: " . session_id());
+error_log("Transaction API - Session user_id: " . ($_SESSION['user_id'] ?? 'not set'));
+error_log("Transaction API - Session data: " . print_r($_SESSION, true));
+
+// Load and handle CORS
+require_once __DIR__ . '/../../app/helpers/CorsHelper.php';
+CorsHelper::handleCors();
+
+// First check authentication
+if (!SessionHelper::isAuthenticated()) {
+    Response::unauthorized();
+}
+
+// Handle CORS headers
+$allowedOrigins = [
+    'http://localhost',
+    'http://localhost:3000',
+    'http://127.0.0.1',
+    'http://127.0.0.1:3000',
+    'http://localhost:80'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+error_log("Transaction API - Request Origin: " . $origin);
+
+// Set JSON and CORS headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost:3000');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Origin: ' . $origin);
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Ensure session cookie is accessible
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', false); // Set to true in production with HTTPS
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

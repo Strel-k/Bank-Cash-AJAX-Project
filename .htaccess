@@ -1,5 +1,4 @@
 RewriteEngine On
-RewriteBase /
 
 # CORS headers for all responses
 Header always set Access-Control-Allow-Origin "http://localhost:3000"

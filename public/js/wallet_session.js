@@ -1,7 +1,8 @@
 // Wallet JavaScript for B-Cash - Session-based authentication
 class WalletService {
     constructor() {
-        this.apiUrl = 'api/wallet.php';
+        // Use relative path for better portability
+        this.apiUrl = '/api/wallet.php';
     }
 
     async getBalance() {
