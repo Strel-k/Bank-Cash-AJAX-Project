@@ -16,47 +16,49 @@ class SessionHelper {
         $isCli = (php_sapi_name() === 'cli');
         
         if (!$isCli) {
-            // Only configure if session is not active
-            if (session_status() === PHP_SESSION_NONE) {
-                error_log("SessionHelper::configureSession - Configuring new session");
-                
-                // Load configuration first
-                $config = require __DIR__ . '/../config/session.php';
-                
-                // Configure session parameters
-                ini_set('session.use_strict_mode', 1);
-                ini_set('session.use_cookies', 1);
-                ini_set('session.use_only_cookies', 1);
-                ini_set('session.cookie_httponly', 1);
-                ini_set('session.gc_maxlifetime', $config['gc_maxlifetime']);
-                
-                // Set session name
-                session_name($config['name']);
-                
-                // Set session cookie parameters
-                session_set_cookie_params(
-                    $config['cookie_lifetime'],
-                    $config['cookie_path'],
-                    $config['cookie_domain'],
-                    $config['cookie_secure'],
-                    $config['cookie_httponly']
-                );
-                
-                // Set up session directory
+            // Set session save path and configure session parameters only if session is not active
+            if (session_status() !== PHP_SESSION_ACTIVE) {
                 $sessionPath = sys_get_temp_dir() . '/php_sessions';
                 if (!is_dir($sessionPath)) {
                     mkdir($sessionPath, 0755, true);
                 }
                 session_save_path($sessionPath);
-                
-                // Start the session
-                session_start();
-                error_log("SessionHelper::configureSession - New session started with ID: " . session_id());
-            } else if (session_status() === PHP_SESSION_ACTIVE) {
-                error_log("SessionHelper::configureSession - Session already active with ID: " . session_id());
+                error_log("SessionHelper::configureSession - Session save path: " . session_save_path());
+
+                // Configure session parameters
+                ini_set('session.use_strict_mode', 1);
+                ini_set('session.use_cookies', 1);
+                ini_set('session.use_only_cookies', 1);
+                ini_set('session.cookie_httponly', 1);
+
+                // Load and apply session configuration
+                $config = require __DIR__ . '/../config/session.php';
+
+                // Set session cookie parameters
+                session_set_cookie_params([
+                    'lifetime' => $config['cookie_lifetime'],
+                    'path' => $config['cookie_path'],
+                    'domain' => $config['cookie_domain'],
+                    'secure' => $config['cookie_secure'],
+                    'httponly' => $config['cookie_httponly'],
+                    'samesite' => $config['cookie_samesite']
+                ]);
+
+                // Set session name
+                session_name($config['name']);
+
+                // Set garbage collection lifetime
+                ini_set('session.gc_maxlifetime', $config['gc_maxlifetime']);
             }
-            
-            error_log("SessionHelper::configureSession - Final session data: " . print_r($_SESSION, true));
+        }
+
+        // Start session if not active
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            error_log("SessionHelper::configureSession - Starting new session");
+            session_start();
+            error_log("SessionHelper::configureSession - New session ID: " . session_id());
+        } else {
+            error_log("SessionHelper::configureSession - Using existing session ID: " . session_id());
         }
         
         error_log("SessionHelper::configureSession - Session data: " . print_r($_SESSION, true));
@@ -86,21 +88,15 @@ class SessionHelper {
     public static function setUserSession($userId, $userData = []) {
         self::configureSession();
         
-        // Store data temporarily
-        $tempData = [
-            'user_id' => $userId,
-            'full_name' => $userData['full_name'] ?? '',
-            'is_admin' => $userData['is_admin'] ?? false,
-            'last_activity' => time()
-        ];
-        
         // Regenerate session ID for security
-        session_regenerate_id(true);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         
-        // Set the session data after regeneration
-        $_SESSION = array_merge($_SESSION, $tempData);
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['full_name'] = $userData['full_name'] ?? '';
+        $_SESSION['is_admin'] = $userData['is_admin'] ?? false;
         
-        error_log("SessionHelper::setUserSession - New session ID: " . session_id());
         error_log("SessionHelper::setUserSession - Session data set: " . print_r($_SESSION, true));
     }
 

@@ -34,9 +34,9 @@ CorsHelper::handleCors();
         <div class="form-container">
             <div class="card">
                 <div class="card-header text-center">
-                    <i class="fas fa-user-circle" style="font-size: 48px; color: var(--gcash-blue); margin-bottom: var(--spacing-md);"></i>
+                    <i class="fas fa-user-circle" style="font-size: 48px; color: rgba(255, 255, 255, 0.9); margin-bottom: var(--spacing-md);"></i>
                     <h1 class="card-title">Welcome Back</h1>
-                    <p style="color: #666;">Sign in to your B-Cash account</p>
+                    <p style="color: rgba(255, 255, 255, 0.9); font-weight: 500;">Sign in to your B-Cash account</p>
                 </div>
                 
                 <form id="loginForm" class="login-form" method="POST" action="javascript:void(0);">

@@ -1,8 +1,9 @@
 // Wallet JavaScript for B-Cash - Session-based authentication
 class WalletService {
     constructor() {
-        // Use relative path for better portability
-        this.apiUrl = '/api/wallet.php';
+        // Use the current origin for consistent URL resolution
+        const baseUrl = window.location.origin;
+        this.apiUrl = `${baseUrl}/B-Cash AJAX/public/api/wallet.php`;
     }
 
     async getBalance() {
@@ -76,9 +77,9 @@ class WalletService {
         }
     }
 
-    async searchAccount(account) {
+    async searchAccount(phone) {
         try {
-            const response = await fetch(`${this.apiUrl}?action=search&account=${account}`, {
+            const response = await fetch(`${this.apiUrl}?action=search&phone=${phone}`, {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ class WalletService {
             const result = await response.json();
             return result;
         } catch (error) {
-            console.error('Search account error:', error);
+            console.error('Search phone error:', error);
             return { success: false, message: 'Search failed' };
         }
     }
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(this);
             const transferData = {
-                receiver_account: formData.get('receiver_account'),
+                receiver_phone: formData.get('receiver_phone'),
                 amount: parseFloat(formData.get('amount')),
                 description: formData.get('description')
             };
@@ -186,19 +187,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Search account
-    const receiverAccountInput = document.getElementById('receiver_account');
-    if (receiverAccountInput) {
-        receiverAccountInput.addEventListener('blur', async function() {
-            const account = this.value.trim();
-            if (account.length >= 6) { // Minimum account number length
-                const result = await walletService.searchAccount(account);
-                if (result.success) {
-                    // Could show account holder name here
-                    console.log('Account found:', result.data.full_name);
-                } else {
-                    console.log('Account search result:', result.message);
+        const receiverPhoneInput = document.getElementById('receiver_phone');
+        if (receiverPhoneInput) {
+            receiverPhoneInput.addEventListener('blur', async function() {
+                const phone = this.value.trim();
+                if (phone.length >= 6) { // Minimum phone number length
+                    const result = await walletService.searchAccount(phone);
+                    if (result.success) {
+                        // Could show account holder name here
+                        console.log('Phone found:', result.data.full_name);
+                    } else {
+                        console.log('Phone search result:', result.message);
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 });

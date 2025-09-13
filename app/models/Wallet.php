@@ -4,6 +4,7 @@ require_once __DIR__ . '/../config/Database.php';
 class Wallet {
     private $db;
     
+
     public function __construct() {
         $database = new Database();
         $this->db = $database->connect();
@@ -101,21 +102,38 @@ class Wallet {
     public function getWalletByAccountNumber($account_number) {
         try {
             $stmt = $this->db->prepare("
-                SELECT w.*, u.full_name 
+                SELECT w.*, u.full_name
                 FROM wallets w
                 JOIN users u ON w.user_id = u.id
                 WHERE w.account_number = ?
             ");
             $stmt->execute([$account_number]);
-            
+
             return $stmt->fetch();
-            
+
+        } catch(PDOException $e) {
+            return null;
+        }
+    }
+
+    public function getWalletByPhoneNumber($phone_number) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT w.*, u.full_name
+                FROM wallets w
+                JOIN users u ON w.user_id = u.id
+                WHERE u.phone_number = ?
+            ");
+            $stmt->execute([$phone_number]);
+
+            return $stmt->fetch();
+
         } catch(PDOException $e) {
             return null;
         }
     }
     
-    public function transferMoney($sender_id, $receiver_account, $amount, $description = '') {
+    public function transferMoney($sender_id, $receiver_phone, $amount, $description = '') {
         try {
             $this->db->beginTransaction();
 
@@ -127,10 +145,10 @@ class Wallet {
             }
 
             // Get receiver wallet
-            $receiver_wallet = $this->getWalletByAccountNumber($receiver_account);
+            $receiver_wallet = $this->getWalletByPhoneNumber($receiver_phone);
             if (!$receiver_wallet) {
                 $this->db->rollBack();
-                return ['success' => false, 'message' => 'Receiver account not found'];
+                return ['success' => false, 'message' => 'Receiver phone number not found'];
             }
 
             // Check if sender has sufficient balance
@@ -139,8 +157,8 @@ class Wallet {
                 return ['success' => false, 'message' => 'Insufficient balance'];
             }
 
-            // Generate unique reference number
-            $reference_number = 'TXN' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            // Generate unique reference number using microtime and random component for guaranteed uniqueness
+            $reference_number = 'TXN' . str_replace('.', '', microtime(true)) . mt_rand(100, 999);
 
             // Deduct from sender (without starting a new transaction)
             $this->updateBalance($sender_id, $amount, 'subtract', false);
@@ -162,7 +180,8 @@ class Wallet {
                 $description
             ]);
 
-            // Record transaction for receiver
+            // Record transaction for receiver with modified reference number
+            $receiver_reference = $reference_number . '-R';
             $stmt = $this->db->prepare("
                 INSERT INTO transactions
                 (sender_wallet_id, receiver_wallet_id, amount, transaction_type, reference_number, description)
@@ -172,7 +191,7 @@ class Wallet {
                 $sender_wallet['id'],
                 $receiver_wallet['id'],
                 $amount,
-                $reference_number,
+                $receiver_reference,
                 $description
             ]);
 
@@ -202,8 +221,8 @@ class Wallet {
                 return ['success' => false, 'message' => 'Wallet not found'];
             }
 
-            // Generate unique reference number
-            $reference_number = 'ADD' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            // Generate unique reference number using microtime for guaranteed uniqueness
+            $reference_number = 'ADD' . str_replace('.', '', microtime(true));
 
             // Add to balance (without starting a new transaction)
             $result = $this->updateBalance($user_id, $amount, 'add', false);
@@ -257,8 +276,8 @@ class Wallet {
                 return ['success' => false, 'message' => 'Insufficient balance'];
             }
 
-            // Generate unique reference number
-            $reference_number = 'BILL' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            // Generate unique reference number using microtime for guaranteed uniqueness
+            $reference_number = 'BILL' . str_replace('.', '', microtime(true));
 
             // Deduct from balance (without starting a new transaction)
             $result = $this->updateBalance($user_id, $amount, 'subtract', false);

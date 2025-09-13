@@ -1,7 +1,7 @@
 <?php
 // Global API configuration
 return [
-    'base_url' => '/api',  // No spaces, simpler URL
+    'base_url' => '/bcash/public/api',  // No spaces, simpler URL
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',

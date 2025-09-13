@@ -83,38 +83,38 @@ class WalletController {
     
     public function transferMoney() {
         $user_id = $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             Response::error('Method not allowed', 405);
         }
-        
+
         $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['receiver_account']) || !isset($data['amount'])) {
-            Response::error('Receiver account and amount are required');
+
+        if (!isset($data['receiver_phone']) || !isset($data['amount'])) {
+            Response::error('Receiver phone number and amount are required');
         }
-        
-        $receiver_account = trim($data['receiver_account']);
+
+        $receiver_phone = trim($data['receiver_phone']);
         $amount = floatval($data['amount']);
         $description = isset($data['description']) ? trim($data['description']) : '';
-        
+
         // Validate amount
         if ($amount <= 0) {
             Response::error('Amount must be greater than 0');
         }
-        
+
         if ($amount > Config::MAX_TRANSFER_AMOUNT) {
             Response::error('Amount exceeds maximum limit');
         }
-        
+
         // Check if receiver is not the same as sender
         $sender_wallet = $this->walletModel->getWalletByUserId($user_id);
-        if ($sender_wallet['account_number'] === $receiver_account) {
-            Response::error('Cannot transfer to your own account');
+        if ($sender_wallet['phone_number'] === $receiver_phone) {
+            Response::error('Cannot transfer to your own phone number');
         }
-        
-        $result = $this->walletModel->transferMoney($user_id, $receiver_account, $amount, $description);
-        
+
+        $result = $this->walletModel->transferMoney($user_id, $receiver_phone, $amount, $description);
+
         if ($result['success']) {
             Response::success([
                 'reference_number' => $result['reference_number'],
@@ -132,25 +132,25 @@ class WalletController {
             Response::error('Method not allowed', 405);
         }
 
-        $account_number = isset($_GET['account']) ? trim($_GET['account']) : '';
+        $phone_number = isset($_GET['phone']) ? trim($_GET['phone']) : '';
 
-        if (empty($account_number)) {
-            Response::error('Account number is required');
+        if (empty($phone_number)) {
+            Response::error('Phone number is required');
         }
 
-        $wallet = $this->walletModel->getWalletByAccountNumber($account_number);
+        $wallet = $this->walletModel->getWalletByPhoneNumber($phone_number);
 
         if (!$wallet) {
-            Response::error('Account not found');
+            Response::error('Phone number not found');
         }
 
         // Don't return own account
         if ($wallet['user_id'] == $user_id) {
-            Response::error('Cannot search own account');
+            Response::error('Cannot search own phone number');
         }
 
         Response::success([
-            'account_number' => $wallet['account_number'],
+            'phone_number' => $wallet['phone_number'],
             'full_name' => $wallet['full_name']
         ]);
     }

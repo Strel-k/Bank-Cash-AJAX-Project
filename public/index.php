@@ -126,15 +126,15 @@ $authController = new AuthController();
             <span class="close" onclick="closeModal('sendMoneyModal')">&times;</span>
             <h2>Send Money</h2>
             <form id="sendMoneyForm">
-                <label for="receiver_account">Receiver Account Number:</label>
-                <input type="text" id="receiver_account" name="receiver_account" required>
-                
+                <label for="receiver_phone">Receiver Phone Number:</label>
+                <input type="text" id="receiver_phone" name="receiver_phone" required>
+
                 <label for="amount">Amount:</label>
                 <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
-                
+
                 <label for="description">Description (optional):</label>
                 <textarea id="description" name="description"></textarea>
-                
+
                 <button type="submit">Send</button>
             </form>
         </div>

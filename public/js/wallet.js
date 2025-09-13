@@ -33,9 +33,9 @@ class WalletService {
         }
     }
 
-    async searchAccount(account) {
+    async searchAccount(phone) {
         try {
-            const response = await fetch(`${this.apiUrl}?action=search&account=${account}`, {
+            const response = await fetch(`${this.apiUrl}?action=search&phone=${phone}`, {
                 credentials: 'include'
             });
             const result = await response.json();
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(this);
             const transferData = {
-                receiver_account: formData.get('receiver_account'),
+                receiver_phone: formData.get('receiver_phone'),
                 amount: parseFloat(formData.get('amount')),
                 description: formData.get('description')
             };
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(this);
             const transferData = {
-                receiver_account: formData.get('receiver_account'),
+                receiver_phone: formData.get('receiver_phone'),
                 amount: parseFloat(formData.get('amount')),
                 description: formData.get('description')
             };
@@ -156,12 +156,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await walletService.transferMoney(transferData);
 
             if (result.success) {
-                alert('Transfer successful! Reference: ' + result.data.reference_number);
                 closeModal('sendMoneyModal');
                 refreshBalance();
                 loadTransactionHistory();
             } else {
-                alert(result.message);
+                console.error('Transfer error:', result.message);
             }
         });
     }

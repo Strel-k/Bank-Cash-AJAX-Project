@@ -1,17 +1,13 @@
 <?php
-// Clear all output buffers and start fresh
-while (ob_get_level()) ob_end_clean();
+// Prevent any output before headers
 ob_start();
 
 // Set error handling to catch everything
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-// Set JSON content type and other important headers
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Cache-Control: post-check=0, pre-check=0', false);
-header('Pragma: no-cache');
+// Set JSON content type
+header('Content-Type: application/json');
 
 // Custom error handler to return JSON errors
 function handleError($errno, $errstr, $errfile, $errline) {
@@ -48,20 +44,20 @@ try {
     error_log("Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN'));
     error_log("Origin: " . ($_SERVER['HTTP_ORIGIN'] ?? 'UNKNOWN'));
 
-// Debug session information
-error_log("Auth API - Session ID: " . session_id());
-error_log("Auth API - Session status: " . session_status());
-error_log("Auth API - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
-error_log("Auth API - All session data: " . print_r($_SESSION, true));
-error_log("Auth API - Cookies received: " . print_r($_COOKIE, true));
+    // Debug session information
+    error_log("Auth API - Session ID: " . session_id());
+    error_log("Auth API - Session status: " . session_status());
+    error_log("Auth API - Session user_id: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
+    error_log("Auth API - All session data: " . print_r($_SESSION, true));
+    error_log("Auth API - Cookies received: " . print_r($_COOKIE, true));
 
-// Log the request details
-error_log("Auth API - Request Method: " . $_SERVER['REQUEST_METHOD']);
-error_log("Auth API - Request Headers: " . print_r(getallheaders(), true));
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+    // Log the request details
+    error_log("Auth API - Request Method: " . $_SERVER['REQUEST_METHOD']);
+    error_log("Auth API - Request Headers: " . print_r(getallheaders(), true));
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
 
     // Get request body for POST requests
     $input = file_get_contents('php://input');
