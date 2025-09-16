@@ -260,10 +260,10 @@ $authController = new AuthController();
                             suggestionsBox.innerHTML = '';
                         });
                         div.addEventListener('mouseenter', () => {
-                            div.style.backgroundColor = '#f8f9fa';
+                            div.style.backgroundColor = '#334155';
                         });
                         div.addEventListener('mouseleave', () => {
-                            div.style.backgroundColor = 'white';
+                            div.style.backgroundColor = '#1a1a2e';
                         });
                         suggestionsBox.appendChild(div);
                     });

@@ -233,10 +233,10 @@ require_once __DIR__ . '/../app/config/Config.php';
         }
         
         .btn-step {
-            padding: 0.75rem 1.5rem;
+            padding: 0.625rem 1.25rem;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -327,16 +327,17 @@ require_once __DIR__ . '/../app/config/Config.php';
         }
         
         .form-button {
-            width: 100%;
-            padding: 0.875rem;
+            width: 80%;
+            padding: 0.75rem 1.25rem;
             background: var(--gcash-green);
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            margin: 1rem auto 0;
         }
         
         .form-button:hover {
@@ -689,16 +690,7 @@ require_once __DIR__ . '/../app/config/Config.php';
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; 2024 B-Cash. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Support</a>
-            </div>
-        </div>
-    </footer>
+   
 
     <script src="js/auth.js"></script>
     <!-- Face-API.js for real AI facial recognition -->
