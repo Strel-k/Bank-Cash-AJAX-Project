@@ -53,6 +53,9 @@ try {
         case 'search':
             $controller->searchAccount();
             break;
+        case 'searchPhoneNumbers':
+            $controller->searchPhoneNumbers();
+            break;
         case 'transfer':
             $controller->transferMoney();
             break;

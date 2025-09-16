@@ -155,6 +155,25 @@ class WalletController {
         ]);
     }
 
+    public function searchPhoneNumbers() {
+        $user_id = $this->checkAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            Response::error('Method not allowed', 405);
+        }
+
+        $query = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+        if (empty($query)) {
+            Response::success(['users' => []]);
+        }
+
+        // Search for phone numbers that start with the query
+        $users = $this->walletModel->searchPhoneNumbers($query, $user_id);
+
+        Response::success(['users' => $users]);
+    }
+
     public function addMoney() {
         $user_id = $this->checkAuth();
 

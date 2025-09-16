@@ -81,23 +81,11 @@ $authController = new AuthController();
                     </div>
                     <div class="action-label">Send Money</div>
                 </button>
-                <button class="action-button" onclick="receiveMoney()">
-                    <div class="action-icon" style="color: var(--gcash-green);">
-                        <i class="fas fa-qrcode"></i>
-                    </div>
-                    <div class="action-label">Receive</div>
-                </button>
                 <button class="action-button" onclick="addMoney()">
                     <div class="action-icon" style="color: var(--gcash-orange);">
                         <i class="fas fa-plus-circle"></i>
                     </div>
                     <div class="action-label">Add Money</div>
-                </button>
-                <button class="action-button" onclick="payBills()">
-                    <div class="action-icon" style="color: var(--gcash-purple);">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
-                    <div class="action-label">Pay Bills</div>
                 </button>
             </div>
         </div>
@@ -127,7 +115,10 @@ $authController = new AuthController();
             <h2>Send Money</h2>
             <form id="sendMoneyForm">
                 <label for="receiver_phone">Receiver Phone Number:</label>
-                <input type="text" id="receiver_phone" name="receiver_phone" required>
+                <div style="position: relative;">
+                    <input type="text" id="receiver_phone" name="receiver_phone" autocomplete="off" required>
+                    <div id="phoneSuggestions" class="suggestions-list" style="display:none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+                </div>
 
                 <label for="amount">Amount:</label>
                 <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
@@ -137,17 +128,6 @@ $authController = new AuthController();
 
                 <button type="submit">Send</button>
             </form>
-        </div>
-    </div>
-
-    <!-- Receive Money Modal -->
-    <div id="receiveMoneyModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('receiveMoneyModal')">&times;</span>
-            <h2>Receive Money</h2>
-            <p>Show your QR code or account number here for others to send money.</p>
-            <div id="qrCodeContainer"></div>
-            <p>Account Number: <span id="userAccountNumber"></span></p>
         </div>
     </div>
 
@@ -165,22 +145,7 @@ $authController = new AuthController();
         </div>
     </div>
 
-    <!-- Pay Bills Modal -->
-    <div id="payBillsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('payBillsModal')">&times;</span>
-            <h2>Pay Bills</h2>
-            <form id="payBillsForm">
-                <label for="bill_account">Bill Account Number:</label>
-                <input type="text" id="bill_account" name="bill_account" required>
-                
-                <label for="bill_amount">Amount:</label>
-                <input type="number" id="bill_amount" name="amount" min="0.01" step="0.01" required>
-                
-                <button type="submit">Pay</button>
-            </form>
-        </div>
-    </div>
+
 
     <script>
         // Initialize balance and transactions
@@ -262,16 +227,67 @@ $authController = new AuthController();
             openModal('sendMoneyModal');
         }
 
-        function receiveMoney() {
-            openModal('receiveMoneyModal');
-        }
+        // AJAX phone number suggestions
+        const receiverPhoneInput = document.getElementById('receiver_phone');
+        const suggestionsBox = document.getElementById('phoneSuggestions');
+
+        receiverPhoneInput.addEventListener('input', async function() {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/public/api/wallet.php?action=searchPhoneNumbers&q=${encodeURIComponent(query)}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success && result.data.users.length > 0) {
+                    suggestionsBox.innerHTML = '';
+                    result.data.users.forEach(user => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.textContent = `${user.full_name} (${user.phone_number})`;
+                        div.style.padding = '8px 12px';
+                        div.style.cursor = 'pointer';
+                        div.style.borderBottom = '1px solid #eee';
+                        div.addEventListener('click', () => {
+                            receiverPhoneInput.value = user.phone_number;
+                            suggestionsBox.style.display = 'none';
+                            suggestionsBox.innerHTML = '';
+                        });
+                        div.addEventListener('mouseenter', () => {
+                            div.style.backgroundColor = '#f8f9fa';
+                        });
+                        div.addEventListener('mouseleave', () => {
+                            div.style.backgroundColor = 'white';
+                        });
+                        suggestionsBox.appendChild(div);
+                    });
+                    suggestionsBox.style.display = 'block';
+                } else {
+                    suggestionsBox.style.display = 'none';
+                    suggestionsBox.innerHTML = '';
+                }
+            } catch (error) {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!receiverPhoneInput.contains(event.target) && !suggestionsBox.contains(event.target)) {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+            }
+        });
 
         function addMoney() {
             openModal('addMoneyModal');
-        }
-
-        function payBills() {
-            openModal('payBillsModal');
         }
 
         function openModal(modalId) {
