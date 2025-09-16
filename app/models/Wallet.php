@@ -132,6 +132,33 @@ class Wallet {
             return null;
         }
     }
+
+    public function searchPhoneNumbers($query, $exclude_user_id = null) {
+        try {
+            $sql = "
+                SELECT u.phone_number, u.full_name
+                FROM users u
+                JOIN wallets w ON u.id = w.user_id
+                WHERE u.phone_number LIKE ?
+            ";
+            $params = [$query . '%'];
+
+            if ($exclude_user_id) {
+                $sql .= " AND u.id != ?";
+                $params[] = $exclude_user_id;
+            }
+
+            $sql .= " ORDER BY u.phone_number LIMIT 10";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+
+            return $stmt->fetchAll();
+
+        } catch(PDOException $e) {
+            return [];
+        }
+    }
     
     public function transferMoney($sender_id, $receiver_phone, $amount, $description = '') {
         try {

@@ -22,10 +22,11 @@ require_once __DIR__ . '/../app/config/Config.php';
         
         .progress-section {
             margin-bottom: 2rem;
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
         }
         
         .progress-steps {
@@ -43,7 +44,7 @@ require_once __DIR__ . '/../app/config/Config.php';
             left: 10%;
             right: 10%;
             height: 2px;
-            background: #e0e0e0;
+            background: var(--border-color);
             z-index: 1;
         }
         
@@ -60,8 +61,8 @@ require_once __DIR__ . '/../app/config/Config.php';
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #e0e0e0;
-            color: #666;
+            background: var(--border-color);
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -82,7 +83,7 @@ require_once __DIR__ . '/../app/config/Config.php';
         
         .step-label {
             font-size: 0.875rem;
-            color: #666;
+            color: var(--text-secondary);
             text-align: center;
             max-width: 80px;
         }
@@ -145,23 +146,23 @@ require_once __DIR__ . '/../app/config/Config.php';
         }
         
         .upload-area {
-            border: 2px dashed #ddd;
+            border: 2px dashed var(--border-color);
             border-radius: 8px;
             padding: 2rem 1rem;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
-            background: #fafafa;
+            background: var(--card-bg);
         }
-        
+
         .upload-area:hover {
             border-color: var(--gcash-green);
-            background: #f0f9f0;
+            background: rgba(0, 177, 79, 0.1);
         }
-        
+
         .upload-area.dragover {
             border-color: var(--gcash-green);
-            background: #e8f5e8;
+            background: rgba(0, 177, 79, 0.2);
         }
         
         .upload-area.active {
@@ -200,9 +201,10 @@ require_once __DIR__ . '/../app/config/Config.php';
         .camera-container {
             text-align: center;
             padding: 2rem;
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 8px;
             margin: 1rem 0;
+            border: 1px solid var(--border-color);
         }
         
         .camera-preview {
@@ -243,17 +245,18 @@ require_once __DIR__ . '/../app/config/Config.php';
         }
         
         .btn-prev {
-            background: #f5f5f5;
-            color: #333;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
-        
+
         .btn-next {
             background: var(--gcash-green);
             color: white;
         }
-        
+
         .btn-prev:hover {
-            background: #e0e0e0;
+            background: var(--border-color);
         }
         
         .btn-next:hover {
@@ -273,10 +276,11 @@ require_once __DIR__ . '/../app/config/Config.php';
         }
         
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
         
         .card-header {
@@ -298,22 +302,28 @@ require_once __DIR__ . '/../app/config/Config.php';
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
         }
-        
+
         .form-input {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid #ddd;
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            color: var(--text-primary);
         }
         
         .form-input:focus {
             outline: none;
             border-color: var(--gcash-green);
-            box-shadow: 0 0 0 2px rgba(0, 123, 85, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 177, 79, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
         }
         
         .form-button {
@@ -407,9 +417,7 @@ require_once __DIR__ . '/../app/config/Config.php';
                 <i class="fas fa-wallet"></i> B-Cash
             </div>
             <nav class="nav-links">
-                <a href="index.php"><i class="fas fa-home"></i> Home</a>
                 <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
-            </nav>
         </div>
     </header>
 

@@ -24,9 +24,7 @@ CorsHelper::handleCors();
             <div class="logo">
                 <i class="fas fa-wallet"></i> B-Cash
             </div>
-            <nav class="nav-links">
-                <a href="index.php"><i class="fas fa-home"></i> Home</a>
-            </nav>
+
         </div>
     </header>
 
