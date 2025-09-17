@@ -45,13 +45,21 @@ class TransactionController {
     
     public function getHistory() {
         $user_id = $this->checkAuth();
-        
-        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
+
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
         $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-        
+
         $transactions = $this->transactionModel->getTransactionHistory($user_id, $limit, $offset);
-        
-        Response::success(['transactions' => $transactions]);
+
+        // Get total count for pagination
+        $total = $this->transactionModel->getTransactionCount($user_id);
+
+        Response::success([
+            'transactions' => $transactions,
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset
+        ]);
     }
     
     public function getStats() {

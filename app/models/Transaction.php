@@ -61,6 +61,22 @@ class Transaction {
         }
     }
     
+    public function getTransactionCount($user_id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as count
+                FROM transactions t
+                JOIN wallets sender ON t.sender_wallet_id = sender.id
+                JOIN wallets receiver ON t.receiver_wallet_id = receiver.id
+                WHERE sender.user_id = ? OR receiver.user_id = ?
+            ");
+            $stmt->execute([$user_id, $user_id]);
+            return $stmt->fetch()['count'];
+        } catch(PDOException $e) {
+            return 0;
+        }
+    }
+
     public function getTransactionStats($user_id) {
         try {
             // Total sent
@@ -72,7 +88,7 @@ class Transaction {
             ");
             $stmt->execute([$user_id]);
             $total_sent = $stmt->fetch()['total_sent'];
-            
+
             // Total received
             $stmt = $this->db->prepare("
                 SELECT COALESCE(SUM(amount), 0) as total_received
@@ -82,7 +98,7 @@ class Transaction {
             ");
             $stmt->execute([$user_id]);
             $total_received = $stmt->fetch()['total_received'];
-            
+
             // Transaction count
             $stmt = $this->db->prepare("
                 SELECT COUNT(*) as transaction_count
@@ -93,13 +109,13 @@ class Transaction {
             ");
             $stmt->execute([$user_id, $user_id]);
             $transaction_count = $stmt->fetch()['transaction_count'];
-            
+
             return [
                 'total_sent' => $total_sent,
                 'total_received' => $total_received,
                 'transaction_count' => $transaction_count
             ];
-            
+
         } catch(PDOException $e) {
             return [
                 'total_sent' => 0,

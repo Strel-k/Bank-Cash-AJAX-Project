@@ -33,15 +33,17 @@ $allowedOrigins = [
     'http://localhost:80'
 ];
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$origin = $_SERVER['HTTP_ORIGIN'] ?? null;
 error_log("Transaction API - Request Origin: " . $origin);
 
 // Set JSON and CORS headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . $origin);
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
+if ($origin && in_array($origin, $allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    header('Access-Control-Allow-Credentials: true');
+}
 
 // Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

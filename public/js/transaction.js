@@ -4,7 +4,7 @@ class TransactionService {
         this.apiUrl = '/public/api/transaction.php';
     }
 
-    async getTransactionHistory(limit = 50, offset = 0) {
+    async getTransactionHistory(limit = 10, offset = 0) {
         try {
             const response = await fetch(`${this.apiUrl}?action=history&limit=${limit}&offset=${offset}`, {
                 credentials: 'include'

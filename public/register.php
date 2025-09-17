@@ -228,7 +228,7 @@ require_once __DIR__ . '/../app/config/Config.php';
         .step-buttons {
             display: flex;
             gap: 1rem;
-            justify-content: space-between;
+            justify-content: center;
             margin-top: 2rem;
         }
         

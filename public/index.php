@@ -167,59 +167,160 @@ $authController = new AuthController();
             }
         }
 
-        async function loadTransactionHistory() {
+        let currentPage = 1;
+        const pageSize = 10;
+
+        async function loadTransactionHistory(page = 1) {
             const transactionHistory = document.getElementById('transactionHistory');
             transactionHistory.innerHTML = '<div class="text-center" style="padding: var(--spacing-lg); color: #666;"><i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: var(--spacing-md);"></i><p>Loading transactions...</p></div>';
-            
+
             try {
-                const result = await transactionService.getTransactionHistory();
-                if (result.success && result.data.transactions.length > 0) {
-                    displayTransactions(result.data.transactions);
+                const offset = (page - 1) * pageSize;
+                const result = await transactionService.getTransactionHistory(pageSize, offset);
+                if (result.success) {
+                    currentPage = page;
+                    if (result.data.transactions.length > 0) {
+                        displayTransactions(result.data.transactions);
+                        displayPagination(result.data.total, page, pageSize);
+                    } else {
+                        transactionHistory.innerHTML = '<div class="text-center" style="padding: var(--spacing-lg); color: #666;"><i class="fas fa-history" style="font-size: 48px; margin-bottom: var(--spacing-md);"></i><p>No transactions yet</p><small>Start using B-Cash to see your transaction history</small></div>';
+                    }
                 } else {
-                    transactionHistory.innerHTML = '<div class="text-center" style="padding: var(--spacing-lg); color: #666;"><i class="fas fa-history" style="font-size: 48px; margin-bottom: var(--spacing-md);"></i><p>No transactions yet</p><small>Start using B-Cash to see your transaction history</small></div>';
+                    transactionHistory.innerHTML = '<div class="text-center" style="padding: var(--spacing-lg); color: #666;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: var(--spacing-md);"></i><p>Failed to load transactions</p></div>';
                 }
             } catch (error) {
                 transactionHistory.innerHTML = '<div class="text-center" style="padding: var(--spacing-lg); color: #666;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: var(--spacing-md);"></i><p>Failed to load transactions</p></div>';
             }
         }
 
+        function displayPagination(total, currentPage, pageSize) {
+            const totalPages = Math.ceil(total / pageSize);
+            if (totalPages <= 1) return;
+
+            const paginationContainer = document.createElement('div');
+            paginationContainer.className = 'pagination-container';
+            paginationContainer.style.cssText = `
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                margin-top: 20px;
+                padding: 10px;
+            `;
+
+            // Previous button
+            if (currentPage > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = 'Previous';
+                prevBtn.className = 'pagination-btn';
+                prevBtn.style.cssText = `
+                    padding: 8px 16px;
+                    background: var(--gcash-blue);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                `;
+                prevBtn.onclick = () => loadTransactionHistory(currentPage - 1);
+                paginationContainer.appendChild(prevBtn);
+            }
+
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = 'pagination-btn';
+                pageBtn.style.cssText = `
+                    padding: 8px 12px;
+                    background: ${i === currentPage ? 'var(--gcash-blue)' : '#f0f0f0'};
+                    color: ${i === currentPage ? 'white' : '#333'};
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                `;
+                pageBtn.onclick = () => loadTransactionHistory(i);
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            // Next button
+            if (currentPage < totalPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = 'Next';
+                nextBtn.className = 'pagination-btn';
+                nextBtn.style.cssText = `
+                    padding: 8px 16px;
+                    background: var(--gcash-blue);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                `;
+                nextBtn.onclick = () => loadTransactionHistory(currentPage + 1);
+                paginationContainer.appendChild(nextBtn);
+            }
+
+            const transactionHistory = document.getElementById('transactionHistory');
+            transactionHistory.appendChild(paginationContainer);
+        }
+
         function displayTransactions(transactions) {
             const container = document.getElementById('transactionHistory');
             container.innerHTML = '';
-            
+
             const transactionList = document.createElement('div');
             transactionList.className = 'transaction-list';
-            
+
             transactions.forEach(transaction => {
                 const transactionItem = document.createElement('div');
                 transactionItem.className = 'transaction-item';
-                
+
                 const isSend = transaction.transaction_type === 'send';
                 const amountClass = isSend ? 'transaction-amount negative' : 'transaction-amount positive';
                 const icon = isSend ? 'fa-arrow-up' : 'fa-arrow-down';
                 const typeText = isSend ? 'Sent' : 'Received';
-                
+
+                // Determine counterparty info
+                let counterpartyInfo = '';
+                if (isSend) {
+                    counterpartyInfo = transaction.receiver_name ?
+                        `To: ${transaction.receiver_name} (${transaction.receiver_account})` :
+                        `To: ${transaction.receiver_account}`;
+                } else {
+                    counterpartyInfo = transaction.sender_name ?
+                        `From: ${transaction.sender_name} (${transaction.sender_account})` :
+                        `From: ${transaction.sender_account}`;
+                }
+
                 transactionItem.innerHTML = `
                     <div class="transaction-details">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                            <div style="flex: 1;">
                                 <h4 style="margin: 0; color: var(--text-primary);">${typeText}</h4>
-                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">${transaction.description || 'Transaction'}</p>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">${counterpartyInfo}</p>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">${transaction.description || 'No description'}</p>
                                 <p style="margin: 0; color: var(--text-secondary); font-size: 0.75rem;">Ref: ${transaction.reference_number}</p>
                             </div>
-                            <div class="${amountClass}" style="font-weight: 600;">
+                            <div class="${amountClass}" style="font-weight: 600; font-size: 1.1rem;">
                                 <i class="fas ${icon}"></i> ₱${parseFloat(transaction.amount).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                             </div>
                         </div>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.5rem;">
-                            ${new Date(transaction.created_at).toLocaleDateString()} ${new Date(transaction.created_at).toLocaleTimeString()}
-                        </p>
+                        <div style="margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.75rem;">
+                                ${new Date(transaction.created_at).toLocaleDateString()} ${new Date(transaction.created_at).toLocaleTimeString()}
+                            </p>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">
+                                ${transaction.transaction_type.toUpperCase()}
+                            </span>
+                        </div>
                     </div>
                 `;
-                
+
                 transactionList.appendChild(transactionItem);
             });
-            
+
             container.appendChild(transactionList);
         }
 
